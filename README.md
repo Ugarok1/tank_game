@@ -1,11 +1,31 @@
-# Idea
-- There're 4 tanks ; 1 player tank ; 3 enemy tanks (slow but big health, fast but low health, almosst same speed as player, same health as player) 
-- Player need to shoot enemies till they die (health <= 0) ; shooting on space ; bullets explode on collision with obstacles/borders/tanks (if with tanks - minus tank health)
-- Player wins if he kills all tanks ; player loose if his health falls below 0, touch any enemy tank set health to 0
-##### Note
-if have a lot of time:
-- enemy tanks can shoot
-- different levels with acceleration of the whole game (enemy tank speed, player speed, bullet speed)
+# Definition
+On start game it opens window. Window is filled with green background, black obstacles and 4 tanks. 
+
+First tank is player, it has normal size and normal speed. 
+
+Three other tanks are enemies. 
+First enemy has bigger then normal size and slower speed. 
+Second enemy has smalled then normal size and a bit faster then normal speed.
+Third  enemy tank has normal size and a bit slower speed.
+
+Each of four tanks have collision with obstacles, borders and with other tanks. 
+
+Player can control his tank with arrows, each arrow moves tank in his direction. Player can shoot if he press space each 3 seconds, if 3 seconda haven't pass yet, his tank should do nothing.
+
+Enemy tanks are controlled by logic, future named by tank AI. 
+Tank AI for first enemy tank moves it directly to player tank, goes around obstacles and shoot each 3 seconds. 
+Tank AI for second enemy tank moves it same horizontal position as player tank, and vertical position 200 pixels away from player tank, then shoot each 5 seconds.
+Tank AI for last enemy tank moves it same vertical position as player tank, and horizontal position 100 pixels away from player tank, then shoot each 3 seconds.
+
+Shoot action from any tank create bullet with fixed for all bullets speed and direction same as where it was shoot. If bullet hit obstacle or border it explode. If hit any tank it explode and subtract tank health.
+
+Explode action from bullet create orange circle for 3 seconds on position where bullet hit the object, after 3 seconds explosino disapear.
+
+Player win when he kill all enemy tanks, on the middle of the screen appears YOU WON blue text.
+Player loose when his health falls below zero, on the middle of the screen appears YOU LOOSE red text.
+#### Extra functionality
+Different levels with random obstacles and growing game speed
+Randomly spawned power-ups for player tank
 # Code
 ## Blocks:
 - OBJECTS : declaration of main object (main tank, enemy tanks)
