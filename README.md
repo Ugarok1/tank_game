@@ -1,19 +1,22 @@
-# with methodo
 # Definition
 On start game it opens window. Window is filled with green background, black obstacles and 4 tanks. 
 
-##### First tank is player, it has normal size and normal speed. 
+##### First tank
+First tank is player, it has normal size and normal speed. 
 
-##### Three other tanks are enemies. 
+##### Other tanks
+Three other tanks are enemies. 
 - First enemy has bigger then normal size and slower speed. 
 - Second enemy has smalled then normal size and a bit faster then normal speed.
 - Third  enemy tank has normal size and a bit slower speed.
 
 Each of four tanks have collision with obstacles, borders and with other tanks. 
 
-###### Player can control his tank with arrows, each arrow moves tank in his direction. Player can shoot if he press space each 3 seconds, if 3 seconda haven't pass yet, his tank should do nothing.
+###### Player controls
+Player can control his tank with arrows, each arrow moves tank in his direction. Player can shoot if he press space each 3 seconds, if 3 seconda haven't pass yet, his tank should do nothing.
 
-###### Enemy tanks are controlled by logic, future named by tank AI. 
+###### Enemy controls
+Enemy tanks are controlled by logic, future named by tank AI. 
 - Tank AI for first enemy tank moves it directly to player tank, goes around obstacles and shoot each 3 seconds. 
 - Tank AI for second enemy tank moves it same horizontal position as player tank, and vertical position 200 pixels away from player tank, then shoot each 5 seconds.
 - Tank AI for last enemy tank moves it same vertical position as player tank, and horizontal position 100 pixels away from player tank, then shoot each 3 seconds.
