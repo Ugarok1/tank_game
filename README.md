@@ -1,10 +1,10 @@
 # Definition
 On start game it opens window. Window is filled with green background, black obstacles and 4 tanks. 
-
-##### First tank
+## Tanks
+### First tank
 First tank is player, it has normal size and normal speed. 
 
-##### Other tanks
+### Other tanks
 Three other tanks are enemies. 
 - First enemy has bigger then normal size and slower speed. 
 - Second enemy has smalled then normal size and a bit faster then normal speed.
@@ -12,10 +12,10 @@ Three other tanks are enemies.
 
 Each of four tanks have collision with obstacles, borders and with other tanks. 
 
-###### Player controls
+### Player controls
 Player can control his tank with arrows, each arrow moves tank in his direction. Player can shoot if he press space each 3 seconds, if 3 seconda haven't pass yet, his tank should do nothing.
 
-###### Enemy controls
+### Enemy controls
 Enemy tanks are controlled by logic, future named by tank AI. 
 - Tank AI for first enemy tank moves it directly to player tank, goes around obstacles and shoot each 3 seconds. 
 - Tank AI for second enemy tank moves it same horizontal position as player tank, and vertical position 200 pixels away from player tank, then shoot each 5 seconds.
@@ -27,7 +27,7 @@ Explode action from bullet create orange circle for 3 seconds on position where 
 
 - Player win when he kill all enemy tanks, on the middle of the screen appears YOU WON blue text.
 - Player loose when his health falls below zero, on the middle of the screen appears YOU LOOSE red text.
-#### Extra functionality
+## Extra functionality
 - Different levels with random obstacles and growing game speed
 - Randomly spawned power-ups for player tank
 # Code
