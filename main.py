@@ -27,10 +27,12 @@ baseSize = 6
 ################
 mainTank = {
     "position": (windowSize[0] / 2, windowSize[1] - 150),
+    "oldPosition": (windowSize[0] / 2, windowSize[1] - 150),
     "sprite": "images/main_tank.png",
     "direction": 0,
+    "oldDirection": 0,
     "health": 3,
-    "speed": baseTankSpeed * 20,
+    "speed": baseTankSpeed * 5,
     "size": baseSize,
     "scale": (12, 10),
     "exist": True,
@@ -38,8 +40,10 @@ mainTank = {
 
 enemyTank1 = {
     "position": [windowSize[0] / 2 - 50, 70],
+    "oldPosition": [windowSize[0] / 2 - 50, 70],
     "sprite": "images/enemy_tank.png",
     "direction": 0,
+    "oldDirection": 0,
     "health": 5,
     "speed": baseTankSpeed / 3,
     "size": baseSize * 1.5,
@@ -49,8 +53,10 @@ enemyTank1 = {
 }
 enemyTank2 = {
     "position": [windowSize[0] / 2, 20],
+    "oldPosition": [windowSize[0] / 2, 20],
     "sprite": "images/enemy_tank.png",
     "direction": 0,
+    "oldDirection": 0,
     "health": 3,
     "speed": baseTankSpeed / 1.7,
     "size": baseSize,
@@ -59,8 +65,10 @@ enemyTank2 = {
 }
 enemyTank3 = {
     "position": [windowSize[0] / 2 + 50, 20],
+    "oldPosition": [windowSize[0] / 2 + 50, 20],
     "sprite": "images/enemy_tank.png",
     "direction": 0,
+    "oldDirection": 0,
     "health": 1,
     "speed": baseTankSpeed * 1.1,
     "size": baseSize / 1.5,
@@ -87,6 +95,20 @@ obstacles = [
 #####################
 
 
+# get scalled object size, but with specific direction
+def getSizeDirection(direction, object):
+    objectSize = (
+        object["scale"][0] * object["size"],
+        object["scale"][1] * object["size"],
+    )
+    if direction == 0 or direction == 2:
+        objectSize = (
+            object["scale"][1] * object["size"],
+            object["scale"][0] * object["size"],
+        )
+    return objectSize
+
+
 # return scalled object size for object direction
 def getSize(object):
     objectSize = (
@@ -101,54 +123,104 @@ def getSize(object):
     return objectSize
 
 
-# return true if object pass border on newPosition and change object position to nearest to border
+# return true if object pass border and direction where met border. Else return false
 def checkBorder(object, newPosition):
     objectScalledSize = getSize(object)
     if newPosition[0] + objectScalledSize[0] > windowSize[0]:
-        object["position"] = (
-            windowSize[0] - objectScalledSize[0],
-            object["position"][1],
-        )
-        return True
-    if newPosition[0] < 0:
-        object["position"] = (0, object["position"][1])
-        return True
-    if newPosition[1] < 0:
-        object["position"] = (object["position"][0], 0)
-        return True
-    if newPosition[1] + objectScalledSize[1] > windowSize[1]:
-        object["position"] = (
-            object["position"][0],
-            windowSize[1] - objectScalledSize[1],
-        )
-        return True
+        return True, 3
+    elif newPosition[0] < 0:
+        return True, 1
+    elif newPosition[1] + objectScalledSize[1] > windowSize[1]:
+        return True, 2
+    elif newPosition[1] < 0:
+        return True, 0
+    else:
+        return False, 0
 
 
-# return true if object have collision with array of objects "obstacles"
+# return true, obstacle and direction of collision if object have collision with array []obstacles
+# newPosition shouldn't been changed for horizontal and verical axes at the same time
 def checkCollision(object, newPosition):
     objectScalledSize = getSize(object)
+    posDifference = (
+        object["position"][0] - newPosition[0],
+        object["position"][1] - newPosition[1],
+    )
     objectRect = (newPosition, objectScalledSize)
-    answer = False
+    collide = False
     for obstacle in obstacles:
-        answer = pygame.Rect(objectRect).colliderect(pygame.Rect(obstacle))
-        if answer:
-            return True
-    return answer
+        collide = pygame.Rect(objectRect).colliderect(pygame.Rect(obstacle))
+        if collide:
+            collisionPosition = (0, 0)
+            if posDifference[0] < 0:
+                collisionPosition = (
+                    obstacle[0][0] - objectScalledSize[0],
+                    object["position"][1],
+                )
+            if posDifference[0] > 0:
+                collisionPosition = (
+                    obstacle[0][0] + obstacle[1][0],
+                    object["position"][1],
+                )
+            if posDifference[1] < 0:
+                collisionPosition = (
+                    object["position"][0],
+                    obstacle[0][1] - objectScalledSize[1],
+                )
+            if posDifference[1] > 0:
+                collisionPosition = (
+                    object["position"][0],
+                    obstacle[0][1] + obstacle[1][1],
+                )
+            return True, obstacle, collisionPosition
+    return collide, 0, 0
 
 
+# draw obstacles defined in []obstacles array
 def drawObstacles(window):
     for obstacle in obstacles:
         pygame.draw.rect(window, (0, 0, 0), obstacle)
 
 
 # change object position to new
-# if new object possition collide or pass border - do nothing
+# if new object possition collide or pass border - change position to closest to border or obstacle
 def changeObjectPosition(object, newPosition):
-    collision = checkCollision(object, newPosition)
-    passBorder = checkBorder(object, newPosition)
-    if collision or passBorder:
+    objectScalledSize = getSize(object)
+    collision, _, collisionPosition = checkCollision(object, newPosition)
+    passBorder, border = checkBorder(object, newPosition)
+    if passBorder:
+        match border:
+            case 0:
+                object["position"] = (object["position"][0], 0)
+            case 1:
+                object["position"] = (0, object["position"][1])
+            case 2:
+                object["position"] = (
+                    object["position"][0],
+                    windowSize[1] - objectScalledSize[1],
+                )
+            case 3:
+                object["position"] = (
+                    windowSize - objectScalledSize[0],
+                    object["position"][1],
+                )
         return
+
+    if collision:
+        object["position"] = collisionPosition
+        return
+
     object["position"] = newPosition
+
+
+# draw object on position, takes care about direction and scaling
+def drawObject(object, window):
+    imagePath = object["sprite"]
+    image = pygame.image.load(imagePath).convert_alpha(window)
+    object_size = getSize(object)
+    image = pygame.transform.rotate(image, 90 * object["direction"])
+    image = pygame.transform.scale(image, object_size)
+    window.blit(image, object["position"])
 
 
 ######################
@@ -157,11 +229,24 @@ def changeObjectPosition(object, newPosition):
 bullets = []
 
 
+# draw bullet
+# only difference with drawObject is sprite source
+def drawBullet(object, window):
+    imagePath = "images/bullet.png"
+    image = pygame.image.load(imagePath).convert_alpha(window)
+    object_size = getSize(object)
+    image = pygame.transform.rotate(image, 90 * object["direction"])
+    image = pygame.transform.scale(image, object_size)
+    window.blit(image, object["position"])
+
+
+# create new object bullet with position depending on parent tank position
+# append new bullet to []bullets array
 def shootBullet(object):
     # get direction of object and set same direction to bullet
     objectDirecton = object["direction"]
     # objectSize only for calculating right position
-    objectSize = getSize(object)
+    objectScalledSize = getSize(object)
     bulletSize = object["size"]
     # bulletScalledSize only for calculating right position
     if objectDirecton == 1 or objectDirecton == 3:
@@ -178,23 +263,23 @@ def shootBullet(object):
     # propositional block for setting right position to bullet
     if objectDirecton == 0:
         bulletPosition = (
-            object["position"][0] + objectSize[0] / 2 - bulletScalledSize[0] / 2,
+            object["position"][0] + objectScalledSize[0] / 2 - bulletScalledSize[0] / 2,
             object["position"][1] - bulletScalledSize[1],
         )
     elif objectDirecton == 1:
         bulletPosition = (
             object["position"][0] - bulletScalledSize[0],
-            object["position"][1] + objectSize[1] / 2 - bulletScalledSize[1] / 2,
+            object["position"][1] + objectScalledSize[1] / 2 - bulletScalledSize[1] / 2,
         )
     elif objectDirecton == 2:
         bulletPosition = (
-            object["position"][0] + objectSize[0] / 2 - bulletScalledSize[0] / 2,
-            object["position"][1] + objectSize[1] + bulletScalledSize[1],
+            object["position"][0] + objectScalledSize[0] / 2 - bulletScalledSize[0] / 2,
+            object["position"][1] + objectScalledSize[1] + bulletScalledSize[1],
         )
     else:
         bulletPosition = (
-            object["position"][0] + objectSize[0] + bulletScalledSize[0],
-            object["position"][1] + objectSize[1] / 2 - bulletScalledSize[1] / 2,
+            object["position"][0] + objectScalledSize[0] + bulletScalledSize[0],
+            object["position"][1] + objectScalledSize[1] / 2 - bulletScalledSize[1] / 2,
         )
     # create bullet speed
     bulletSpeed = (0, 0)
@@ -227,21 +312,31 @@ def moveBullet(bullet, window):
         bullet["position"][0] + bullet["speed"][0],
         bullet["position"][1] + bullet["speed"][1],
     )
-    collision = checkCollision(bullet, newBulletPosition)
-    passBorder = checkBorder(bullet, newBulletPosition)
+    collision, _, _ = checkCollision(bullet, newBulletPosition)
+    passBorder, _ = checkBorder(bullet, newBulletPosition)
+
+    # WORK IF HAVE TIME
+    # if passBorder:
+    #     match border:
+    #         case 0:
+    #             bullet["position"] = (bullet["position"][0], 0)
+    #         case 1:
+    #             bullet["position"] = (0, bullet["position"][1])
+    #         case 2:
+    #             bullet["position"] = (bullet["position"][0], windowSize[1]-objectScalledSize[1])
+    #         case 3:
+    #             bullet["position"] = (windowSize - objectScalledSize[0], bullet["position"][1])
+    #     return
+    #
+    # if collision:
+    #     object["position"] = collisionPosition
+    #     return
+
     if collision or passBorder:
         bulletExplode(bullet, time.time(), window)
         return False
     bullet["position"] = newBulletPosition
     return True
-
-
-def drawBullet(bullet, window):
-    image = pygame.image.load("images/bullet.png").convert_alpha(window)
-    object_size = getSize(bullet)
-    image = pygame.transform.rotate(image, 90 * bullet["direction"])
-    image = pygame.transform.scale(image, object_size)
-    window.blit(image, bullet["position"])
 
 
 # add to main loop
@@ -264,7 +359,7 @@ explosionColor = (255, 127, 0)
 
 
 # create explosion object for parent bullet object
-# and delete bullet from canvas and bullets array
+# and delete bullet from canvas and []bullets array
 def bulletExplode(bullet, currentTime, window):
     bullets.remove(bullet)
     scalledBulletSize = getSize(bullet)
@@ -279,6 +374,8 @@ def bulletExplode(bullet, currentTime, window):
     explosions.append(explosion)
 
 
+# if exposioin was create less then 3 seconds before: do nothing
+# else: delete explosion object from canvas and []explosions array
 def animateExplosion(explosion, window):
     explosionTime = explosion["time"]
     if explosionTime + 3 <= time.time():
@@ -299,19 +396,9 @@ def animateExplosions(window):
 #######################
 # TANK MOVEMENT BLOCK #
 #######################
-def drawTank(object, window):
-    image = pygame.image.load(object["sprite"]).convert_alpha(window)
-    object_size = getSize(object)
-    image = pygame.transform.rotate(image, 90 * object["direction"])
-    image = pygame.transform.scale(image, object_size)
-    window.blit(image, object["position"])
-
-
 def moveTankUp(object, window):
-    oldTankSize = getSize(object)
+    object["oldDirection"] = object["direction"]
     object["direction"] = 0
-    rectValues = (object["position"], oldTankSize)
-    pygame.draw.rect(window, backgroundColor, rectValues)
     changeObjectPosition(
         object,
         (
@@ -319,14 +406,11 @@ def moveTankUp(object, window):
             object["position"][1] - object["speed"],
         ),
     )
-    drawTank(object, window)
 
 
 def moveTankDown(object, window):
-    oldTankSize = getSize(object)
+    object["oldDirection"] = object["direction"]
     object["direction"] = 2
-    rectValues = (object["position"], oldTankSize)
-    pygame.draw.rect(window, backgroundColor, rectValues)
     changeObjectPosition(
         object,
         (
@@ -334,14 +418,11 @@ def moveTankDown(object, window):
             object["position"][1] + object["speed"],
         ),
     )
-    drawTank(object, window)
 
 
 def moveTankRight(object, window):
-    oldTankSize = getSize(object)
+    object["oldDirection"] = object["direction"]
     object["direction"] = 3
-    rectValues = (object["position"], oldTankSize)
-    pygame.draw.rect(window, backgroundColor, rectValues)
     changeObjectPosition(
         object,
         (
@@ -349,14 +430,11 @@ def moveTankRight(object, window):
             object["position"][1],
         ),
     )
-    drawTank(object, window)
 
 
 def moveTankLeft(object, window):
-    oldTankSize = getSize(object)
+    object["oldDirection"] = object["direction"]
     object["direction"] = 1
-    rectValues = (object["position"], oldTankSize)
-    pygame.draw.rect(window, backgroundColor, rectValues)
     changeObjectPosition(
         object,
         (
@@ -364,48 +442,82 @@ def moveTankLeft(object, window):
             object["position"][1],
         ),
     )
-    drawTank(object, window)
+
+
+# add to main loop
+# render tank to canvas
+def animateTank(object, window):
+    oldTankDirection = object["oldDirection"]
+
+    oldTankPosition = object["oldPosition"]
+    oldTankScalledSize = getSizeDirection(oldTankDirection, object)
+
+    rectValues = (oldTankPosition, oldTankScalledSize)
+
+    pygame.draw.rect(window, backgroundColor, rectValues)
+    drawObject(object, window)
+    object["oldPosition"] = object["position"]
 
 
 ###############
 # ENEMY LOGIC #
 ###############
+# check collision for object with selected direction and new position
+# return true if collision, else false
+def checkCollisionDirection(direction, object, newPosition):
+    objectScalledSize = getSizeDirection(direction, object)
+    objectRect = (newPosition, objectScalledSize)
+    answer = False
+    for obstacle in obstacles:
+        answer = pygame.Rect(objectRect).colliderect(pygame.Rect(obstacle))
+        if answer:
+            return True
+    return answer
+
+
+# for each tryMove:
+# set newPosition based on object coords and object speed
+# if newPositoin collide with []obstacles: save collision directoin to object
+# else: move tank
 def tryMoveRight(object, window):
     newPosition = (object["position"][0] + object["speed"], object["position"][1])
-    collision = checkCollision(object, newPosition)
+    collision = checkCollisionDirection(3, object, newPosition)
     if collision:
-        object["collide"] = object["direction"]
+        object["collide"] = 3
     else:
         moveTankRight(object, window)
 
 
 def tryMoveLeft(object, window):
     newPosition = (object["position"][0] - object["speed"], object["position"][1])
-    collision = checkCollision(object, newPosition)
+    collision = checkCollisionDirection(1, object, newPosition)
     if collision:
-        object["collide"] = object["direction"]
+        object["collide"] = 1
     else:
         moveTankLeft(object, window)
 
 
 def tryMoveUp(object, window):
     newPosition = (object["position"][0], object["position"][1] - object["speed"])
-    collision = checkCollision(object, newPosition)
+    collision = checkCollisionDirection(0, object, newPosition)
     if collision:
-        object["collide"] = object["direction"]
+        object["collide"] = 0
     else:
         moveTankUp(object, window)
 
 
 def tryMoveDown(object, window):
     newPosition = (object["position"][0], object["position"][1] + object["speed"])
-    collision = checkCollision(object, newPosition)
+    collision = checkCollisionDirection(2, object, newPosition)
     if collision:
-        object["collide"] = object["direction"]
+        object["collide"] = 2
     else:
         moveTankDown(object, window)
 
 
+# move tank1 most effectively to mainTank
+# on collision with obstacle try to get around that obstacle (always by left)
+# for more precise comprehension - read the function
 def startTank1AI(window):
     tank1Position = enemyTank1["position"]
     mainTankPosition = mainTank["position"]
@@ -429,28 +541,28 @@ def startTank1AI(window):
         if collisionSide == 0:
             tryMoveLeft(enemyTank1, window)
             newPosition = (tank1Position[0], tank1Position[1] - enemyTank1["speed"])
-            collision = checkCollision(enemyTank1, newPosition)
+            collision = checkCollisionDirection(collisionSide, enemyTank1, newPosition)
             if not collision:
                 tryMoveUp(enemyTank1, window)
                 enemyTank1["collide"] = 4
         if collisionSide == 1:
             tryMoveDown(enemyTank1, window)
             newPosition = (tank1Position[0] - enemyTank1["speed"], tank1Position[1])
-            collision = checkCollision(enemyTank1, newPosition)
+            collision = checkCollisionDirection(collisionSide, enemyTank1, newPosition)
             if not collision:
                 tryMoveLeft(enemyTank1, window)
                 enemyTank1["collide"] = 4
         if collisionSide == 2:
             tryMoveRight(enemyTank1, window)
             newPosition = (tank1Position[0], tank1Position[1] + enemyTank1["speed"])
-            collision = checkCollision(enemyTank1, newPosition)
+            collision = checkCollisionDirection(collisionSide, enemyTank1, newPosition)
             if not collision:
                 tryMoveDown(enemyTank1, window)
                 enemyTank1["collide"] = 4
         if collisionSide == 3:
             tryMoveUp(enemyTank1, window)
             newPosition = (tank1Position[0] + enemyTank1["speed"], tank1Position[1])
-            collision = checkCollision(enemyTank1, newPosition)
+            collision = checkCollisionDirection(collisionSide, enemyTank1, newPosition)
             if not collision:
                 tryMoveRight(enemyTank1, window)
                 enemyTank1["collide"] = 4
@@ -488,10 +600,12 @@ while not end:
                 shootBullet(mainTank)
     animateExplosions(mainWindow)
     animateBullets(mainWindow)
+    animateTank(enemyTank1, mainWindow)
+    animateTank(mainTank, mainWindow)
     startTank1AI(mainWindow)
     drawObstacles(mainWindow)
     pygame.display.flip()
-    time1.tick(60)
+    time1.tick(30)
 
 pygame.display.quit()
 pygame.quit()
