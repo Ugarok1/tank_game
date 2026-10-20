@@ -27,10 +27,37 @@ Explode action from bullet create orange circle for 3 seconds on position where 
 
 - Player win when he kill all enemy tanks, on the middle of the screen appears YOU WON blue text.
 - Player loose when his health falls below zero, on the middle of the screen appears YOU LOOSE red text.
-## Extra functionality
+## Extra functionality (if have time)
 - Different levels with random obstacles and growing game speed
 - Randomly spawned power-ups for player tank
+- Breakable objects (for obstacles)
+- lives (not health) for main tank and respawn function
+- levels load from file (configs for levels in file)
+- on next level more tanks 
 # Code
+## Basic 
+### Objects
+#### Blueprint general object (is in all objects)
+- name: NAME 
+- rectangle: (type like `[[posX, posY], [sizeX, sizeY]]` for obstacles is size; for tanks is scale
+- sprite: path
+#### Blueprint obstacle 
+- type: (obstacle/tank/bullet/explosion...)
+#### Blueprint tank
+- type: (obstacle/tank/bullet/explosion...)
+- movement: `[direction, currentSpeed]`
+- logic: function for movement of the tank
+- lives: int ; how many times can respawn
+- health: int ; how many health does tank has
+- speed: int ; base speed, how fast it moves in general, not at this moment
+#### Blueprint bullet
+- type: (obstacle/tank/bullet/explosion...)
+- movement: `[direction, currentSpeed]`
+- speed: int ; base speed, how fast it moves in general, not at this moment
+#### Blueprint 
+- type: (obstacle/tank/bullet/explosion...)
+- lifeTime: int ; decrease number on every frame, if 0 delete object
+
 ## Blocks:
 - OBJECTS : declaration of main object (main tank, enemy tanks)
 - UTILITY FUNCTIONS : functions that we will use for general logic, for calculations, etc

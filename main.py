@@ -22,9 +22,13 @@ baseBulletSpeed = 14
 baseBulletScale = (4, 2)
 baseSize = 6
 
-################
-# TANK OBJECTS #
-################
+###########
+# OBJECTS #
+###########
+def createBaseObject(name):
+    object = {name: }
+    return
+
 mainTank = {
     "position": (windowSize[0] / 2, windowSize[1] - 150),
     "oldPosition": (windowSize[0] / 2, windowSize[1] - 150),
