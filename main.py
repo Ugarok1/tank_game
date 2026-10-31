@@ -25,9 +25,30 @@ baseSize = 6
 ###########
 # OBJECTS #
 ###########
-def createBaseObject(name):
-    object = {name: }
-    return
+objects = []
+# task: create fcts for objects; create functions with only entries and deskription, no funcitonality, only bp
+def createBaseObject(sprite, position, size):
+    object = {"rect": [position, size], "sprite": sprite}
+    return object
+
+def createTank(name, sprite, position, health, live, speed, scale, size):
+    newObject = createBaseObject(sprite, position, scale)
+    newObject["name"] = name
+    newObject["type"] = "tank"
+    newObject["health"] = health
+    newObject["live"] = live
+    # first value is direction, second value is current speed (0 because object don't move)
+    newObject["mouvement"] = [0, 0]
+    newObject["speed"] = speed
+    newObject["size"] = size
+    objects.append(newObject)
+
+def createObstacle(name, sprite, position, size):
+    newObject =  createBaseObject(sprite, position, size)
+    newObject["type"] = "obstacle"
+    obstacles.append(newObject)
+
+def createBullet(position, parent, )
 
 mainTank = {
     "position": (windowSize[0] / 2, windowSize[1] - 150),
