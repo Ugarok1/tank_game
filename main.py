@@ -13,6 +13,13 @@ keyMoveLeft = pygame.K_LEFT
 keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
 keySpace = pygame.K_SPACE
+###############
+# BASE BALUES #
+###############
+base_speed = 5
+base_size = 5
+base_health = 3
+bonus_sprite = "image/bonus.png"
 
 ########################
 # template for objects #
@@ -132,7 +139,7 @@ def create_tank(
         "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
     }
     position = {
-        "rect": [basePosition, (10, 12)],
+        "rect": [basePosition, (10, 10)],
         "direction": 0,
         "sprite": sprite,
         "size": size,
@@ -146,7 +153,28 @@ def create_tank(
         "logic": logic,
         "turrets": turret,
         "bonuses": None,
-        "team": team,
+        "team": team,  # team 0 - obstacles, team 1 - player, team 2 enemy, team 3 - bonuses
+    }
+    return object
+
+
+def create_bonus(basePosition, size, lifetime):
+    position = {
+        "rect": [basePosition, (10, 10)],
+        "direction": 0,
+        "sprite": bonus_sprite,
+        "size": size,
+    }
+    lives = {"hp": lifetime, "max_hp": lifetime, "lives": 1}
+    mouvement = {"speed": 0, "max_speed": 0}
+    object = {
+        "position": position,
+        "health": lives,
+        "movement": mouvement,
+        "logic": None,
+        "turrets": [],
+        "bonuses": [],
+        "team": 3,
     }
     return object
 
