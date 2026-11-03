@@ -48,71 +48,63 @@ def createObstacle(name, sprite, position, size):
     newObject["type"] = "obstacle"
     obstacles.append(newObject)
 
-def createBullet(position, parent, )
+def createBullet(position, parent, ):
 
-mainTank = {
-    "position": (windowSize[0] / 2, windowSize[1] - 150),
-    "oldPosition": (windowSize[0] / 2, windowSize[1] - 150),
-    "sprite": "images/main_tank.png",
-    "direction": 0,
-    "oldDirection": 0,
-    "health": 3,
-    "speed": baseTankSpeed * 5,
-    "size": baseSize,
-    "scale": (12, 10),
-    "exist": True,
-}
 
-enemyTank1 = {
-    "position": [windowSize[0] / 2 - 50, 70],
-    "oldPosition": [windowSize[0] / 2 - 50, 70],
-    "sprite": "images/enemy_tank.png",
-    "direction": 0,
-    "oldDirection": 0,
-    "health": 5,
-    "speed": baseTankSpeed / 3,
-    "size": baseSize * 1.5,
-    "scale": (12, 10),
-    "collide": 4,
-    "exist": True,
-}
-enemyTank2 = {
-    "position": [windowSize[0] / 2, 20],
-    "oldPosition": [windowSize[0] / 2, 20],
-    "sprite": "images/enemy_tank.png",
-    "direction": 0,
-    "oldDirection": 0,
-    "health": 3,
-    "speed": baseTankSpeed / 1.7,
-    "size": baseSize,
-    "scale": (12, 10),
-    "exist": True,
-}
-enemyTank3 = {
-    "position": [windowSize[0] / 2 + 50, 20],
-    "oldPosition": [windowSize[0] / 2 + 50, 20],
-    "sprite": "images/enemy_tank.png",
-    "direction": 0,
-    "oldDirection": 0,
-    "health": 1,
-    "speed": baseTankSpeed * 1.1,
-    "size": baseSize / 1.5,
-    "scale": (12, 10),
-    "exist": True,
-}
-# array of objects
-# obstacle object have values similar to rectangle values, meaning ((x, y), (sizeX, sizeY))
-obstacles = [
-    ((windowSize[0] / 5, windowSize[1] * 2 / 3), (windowSize[0] * 3 / 5, 90)),
-    (
-        (windowSize[0] / 10, windowSize[1] / 10),
-        (windowSize[0] / 10, windowSize[1] / 10),
-    ),
-    (
-        (windowSize[0] - 2 * windowSize[0] / 10, windowSize[1] / 10),
-        (windowSize[0] / 10, windowSize[1] / 10),
-    ),
-]
+#############
+# blueprint #
+#############
+
+# funcs for creating objects 
+# Input: ez
+# Output: in []Objects
+
+# moveObject
+# Input: new position (change position of object). Should take care about collision with objects and borders (if collide place operating object as close as possible to obstacle or border).
+# Output: change object position
+
+# drawObjects 
+# Containe for loop with drawObject functions
+# Input: None 
+# Output: all objects on canvas
+
+# shoot 
+# Append bullet object to objects 
+# Input: object shoot 
+# Output: added bullet object 
+
+# explode
+# Create explosion from bullet
+# Input: bullet parent
+# Output: bullet to objects
+
+# calculateBullets
+# New bullet position and verify collision with objects. On collide look object type and do whatever you want in that function
+# Input: bullets
+# Output: bullet new position and actions on collision
+
+# calculateExplosions
+# Count 3 sec after explosion creating and delete if live too long
+# Input: exposions 
+# Output: delete explosion or nothing
+
+# doAITanks
+# Apply functions for all tanks if they have one (for enemy logic/AI)
+# Input: object of type tank 
+# Output: apply funciton defined it object 
+
+# 
+
+
+
+
+
+
+
+
+
+
+
 
 
 #####################
