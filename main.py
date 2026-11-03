@@ -19,6 +19,7 @@ keySpace = pygame.K_SPACE
 ########################
 # If, for ex. movement is None, then object can't be moved
 Object = {
+        "type": None,  # Type of object
         "position": None,  # Will contain position dict for drawing object
         "health": None,  # Will containg health and life/respawn info
         "movement": None,  # Will contain seed, that will determine how object will move
