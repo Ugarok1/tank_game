@@ -148,7 +148,7 @@ def create_tank(
         "bonuses": None,
         "team": team,
     }
-    objects.append(object)
+    return object
 
 
 ####################
