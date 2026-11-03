@@ -20,13 +20,14 @@ keySpace = pygame.K_SPACE
 # If, for ex. movement is None, then object can't be moved
 Object = {
         "type": None,  # Type of object
+        "name": "",  # Name of object for debug
         "position": None,  # Will contain position dict for drawing object
         "health": None,  # Will containg health and life/respawn info
         "movement": None,  # Will contain seed, that will determine how object will move
         "logic": None,  # Will contain pointer to function how object will behave
         "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
-        "team": 0  # If obj frendly, hostile or neutral
+        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
         }
 
 Turret = {
@@ -38,7 +39,7 @@ Position = {
         "rect": Pygame.Rectangle(),
         "direction": 0,
         "sprite": None,  # init
-        "size": None,  # init
+        "size": None,  # init int size of square
         }
 
 Lives = {
@@ -116,6 +117,66 @@ def draw_score():
 def clean_objects():
     """
     Removes destroed objects and bonuses from global list
+    """
+    pass
+
+def init():
+    """
+    Declaration des objet
+    """
+    pass
+
+def moveObject(obj, direction):
+    """
+    Detect if object can move in given direction, then if possible move it
+    """
+    pass
+
+def shoot(obj):
+    """
+    Create a bullet in direction of object
+    """
+    pass
+
+def parseKeys():
+    """
+    Detect pressed keys
+    """
+
+def logicPlayer(obj, keys):
+    """
+    Move and shoot based on player input
+    """
+    pass
+
+def logicEnemy(obj):
+    """
+    Move AI tank based on environment
+
+    Variants:
+        random: change direction at random at obstacle
+                and after minimum distance
+        hunter: Actively following player
+        target_shoot: shoot if can hurt player tank
+    """
+    pass
+
+def spawnBonus():
+    """
+    Create a new bonus after timeout and if no bonuses of screen
+    """
+    pass
+
+def hurt(obj, ball):
+    """
+    Reduce hp of object, destroy ball, create collision explosion
+    Check if object is destroyed
+    """
+    pass
+
+def respawn(obj, pos):
+    """
+    Recreate destryed object at given position
     """
     pass
 
