@@ -23,15 +23,13 @@ Object = {
         "health": None,  # Will containg health and life/respawn info
         "movement": None,  # Will contain seed, that will determine how object will move
         "logic": None,  # Will contain pointer to function how object will behave
-        "turrets": [],  # List of turrets associated to object
+        "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
         "team": 0  # If obj frendly, hostile or neutral
         }
 
 Turret = {
-        "direction": 0,  # Direction w.r.t. object orientation
         "reload": None,  # Time between succesive shoots
-        "salvo": 1,  # Number of bullets per shot
         "timeout": 0,  # Countdown from the last shot
         }
 
@@ -51,7 +49,6 @@ Lives = {
 Movement = {
         "speed": 0,  # Current speed in direction of object, may be negative
         "max_speed": None,  # init
-        "accel": None,  # init
         }
 
 #########################
