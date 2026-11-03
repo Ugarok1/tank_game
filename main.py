@@ -52,6 +52,16 @@ Movement = {
         "max_speed": None,  # init
         }
 
+
+def new_bullet(obj):
+    bullet = Object.copy()
+    bullet["bonuses"] = []
+    bullet["type"] = "bullet"
+    bullet["movement"] = {"seed": BULLET_SPEED,
+                          "max_speed": BULLET_SPEED}
+    # fix position
+    return bullet
+
 #########################
 # Global object holders #
 #########################
