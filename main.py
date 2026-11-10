@@ -6,6 +6,8 @@ import random
 import time
 
 backgroundColor = (0, 191, 200)
+#This one place is for colors !... until we place textures or not idk (Jules)
+BLACK = (  0,   0,   0)
 
 windowSize = (1200, 900)
 
@@ -19,6 +21,10 @@ keySpace = pygame.K_SPACE
 # template for objects #
 ########################
 # If, for ex. movement is None, then object can't be moved
+
+
+
+
 Object = {
         "type": None,  # Type of object
         "name": "",  # Name of object for debug
@@ -29,6 +35,8 @@ Object = {
         "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
         "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+
+
         }
 
 Turret = {
@@ -171,6 +179,26 @@ def respawn(obj, pos):
     """
     pass
 
+def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
+#blocks on the stage (Jules)
+        Position = {
+            "rect" : [position, [BLOCK_LENGHT, BLOCK_WIDTH]],
+            "direction" : None
+            "sprite" : None
+            "size" : None
+
+        }
+        object = {
+        "position": Position,  # Will contain position dict for drawing object
+        "health": None,  # Will containg health and life/respawn info
+        "movement": None,  # Will contain seed, that will determine how object will move
+        "logic": None,  # Will contain pointer to function how object will behave
+        "turret": None,  # Parameters of cannon
+        "bonuses": [],  # List of bonuses affecting object
+        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+        
+        }
+        return object
 
 ####################
 # START GAME BLOCK #
