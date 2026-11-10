@@ -14,6 +14,16 @@ keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
 keySpace = pygame.K_SPACE
 
+# Directions
+N = 0
+E = 1
+S = 2
+W = 3
+
+
+BULLET_SPEED = 10
+BULLET_SIZE = 3
+
 ########################
 # template for objects #
 ########################
@@ -23,8 +33,10 @@ Object = {
         "name": "",  # Name of object for debug
         "position": None,  # Will contain position dict for drawing object
         "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine how object will move
-        "logic": None,  # Will contain pointer to function how object will behave
+        "movement": None,  # Will contain seed, that will determine
+                           # how object will move
+        "logic": None,  # Will contain pointer to function
+                        # how object will behave
         "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
         "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
@@ -36,7 +48,7 @@ Turret = {
         }
 
 Position = {
-        "rect": Pygame.Rectangle(),
+        "rect": pygame.Rectangle(),
         "direction": 0,
         "sprite": None,  # init
         "size": None,  # init int size of square
@@ -45,7 +57,8 @@ Position = {
 Lives = {
         "hp": None,
         "max_hp": None,  # init
-        "lives": None,  # init, number of respawns
+        "lives": None,  # init, number of respawns,
+                        # TODO: decide starts with 0 or 1
         }
 
 Movement = {
@@ -54,13 +67,63 @@ Movement = {
         }
 
 
+# N. Beliy s2604210
 def new_bullet(obj):
-    bullet = Object.copy()
-    bullet["bonuses"] = []
+    """
+    Create a new bullet object in the direction of shooter
+    Bullet is created just outside of shooter box.
+
+    To avoid collision with shooter, bullet must be moved
+    after it's creation
+
+    Parameters:
+    -----------
+        obj: dict
+            Shooter object
+
+    Returns:
+    --------
+        Bullet object
+    """
+    bullet = {}
     bullet["type"] = "bullet"
+    bullet["name"] = obj["name"] + "_bullet"
+    # fix position
+    obj_pos = obj["position"]
+    if obj_pos["direction"] == N:
+        point = obj_pos["rect"].midtop
+        point = (point[0] - 0.5 * BULLET_SIZE,
+                 point[1] - BULLET_SIZE)
+    elif obj_pos["direction"] == E:
+        point = obj_pos["rect"].midright
+        point = (point[0],
+                 point[1] - 0.5 * BULLET_SIZE)
+    elif obj_pos["direction"] == S:
+        point = obj_pos["rect"].midright
+        point = (point[0] - 0.5 * BULLET_SIZE,
+                 point[1])
+    elif obj_pos["direction"] == W:
+        point = obj_pos["rect"].midright
+        point = (point[0] - BULLET_SIZE,
+                 point[1] - 0.5 * BULLET_SIZE)
+    else:
+        raise Exception("[{}] Invalid direction: {}"
+                        .format(obj["name"], obj_pos["direction"]))
+
+    bullet["position"] = {
+            "rect": pygame.Rect((point), (BULLET_SIZE, BULLET_SIZE)),
+            "direction": obj_pos["direction"],
+            "sprite": "images/bullet.png",
+            "size": BULLET_SIZE
+            }
+
+    bullet["health"] = {"hp": 1, "max_hp": 1, "lives": 0}
     bullet["movement"] = {"seed": BULLET_SPEED,
                           "max_speed": BULLET_SPEED}
-    # fix position
+    bullet["logic"] = None
+    bullet["turret"] = None,
+    bullet["bonuses"] = []
+    bullet["team"] = obj["team"]  # TODO: Decide on friendly fire
     return bullet
 
 #########################
@@ -70,7 +133,6 @@ objects = []  # List of objects
 keys = []  # List/set of pressed keys
 bonuses = [] # List of not-activated bonuses
 
-# 
 def spawn(obj):
     """
     Put created object into game
