@@ -204,18 +204,40 @@ def init():
     pass
 
 
-def moveObject(obj, direction):
+def moveObject(obj):
     """
     Detect if object can move in given direction, then if possible move it
     """
     pass
 
-# meme que create_bullet, nikita
+# N. Beliy s2604210
 def shoot(obj):
     """
-    Create a bullet in direction of object
+    Checks if object can shoot (has turret and not reloading)
+    and create a new bullet.
+
+    Created bullet is moved immediatly and returned.
+
+    Parameters:
+    -----------
+        obj: Object
+            shooter
+
+    Returns:
+    --------
+        Bullet or None
     """
-    pass
+    if obj["turret"] is None or obj["turret"]["timeout"] > 0:
+        # Object can't shoot
+        return None
+
+    obj["turret"]["timeout"] = obj["turret"]["reload"]
+    bullet = new_bullet(obj)
+
+    # TODO: Adding to the list during iteration may cause problems
+    # TODO: Avoid double move
+    moveObject(bullet)
+    return bullet
 
 # N. Beliy s2604210
 def parseKeys(events):
