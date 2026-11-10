@@ -6,8 +6,7 @@ import random
 import time
 
 backgroundColor = (0, 191, 200)
-#This one place is for colors !... until we place textures or not idk (Jules)
-BLACK = (  0,   0,   0)
+
 
 windowSize = (1200, 900)
 
@@ -45,7 +44,7 @@ Turret = {
         }
 
 Position = {
-        "rect": Pygame.Rectangle(),
+        "rect": [[x, y],[width, lenght]],
         "direction": 0,
         "sprite": None,  # init
         "size": None,  # init int size of square
@@ -179,8 +178,8 @@ def respawn(obj, pos):
     """
     pass
 
+#block on the stage (S2601624, Lesquir, Jules)
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
-#blocks on the stage (Jules)
         Position = {
             "rect" : [position, [BLOCK_LENGHT, BLOCK_WIDTH]],
             "direction" : None
@@ -199,6 +198,25 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         
         }
         return object
+
+#Draw objects based on their "type" (S2601624, Lesquir, Jules)
+def draw_for_object(obj):
+    if obj["type"] == "obstacle":
+        color = (   0,   0,   0)
+        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
+
+    elif obj["type"] == "tank" or obj["type"] =="bullet":
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
+        image = pygame.transform.scale(image, ["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
+
+    else:
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.scale(image, ["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
 
 ####################
 # START GAME BLOCK #
