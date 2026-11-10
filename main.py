@@ -12,7 +12,15 @@ keyMoveRight = pygame.K_RIGHT
 keyMoveLeft = pygame.K_LEFT
 keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
-keySpace = pygame.K_SPACE
+keyShoot = pygame.K_SPACE
+
+keyQuit = pygame.K_q
+keyPause = pygame.K_p
+
+KEYS = {"singular": set(keyShoot, keyQuit, keyPause),
+        "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight)
+        }
+keys = set()
 
 # Directions
 N = 0
@@ -209,11 +217,26 @@ def shoot(obj):
     """
     pass
 
-# nikita
-def parseKeys():
+# N. Beliy s2604210
+def parseKeys(events):
     """
-    Detect pressed keys
+    Detect pressed keys and put seleted ones in the global keys
+    For continious keys, it also detect unpressing of key.
+
+    Parameters:
+    -----------
+        events: list
+            List of events of pygame
     """
+    for event in events:
+        if event.type == pygame.QUIT:
+            keys.add(keyQuit)
+        elif event.type == pygame.KEYDOWN:
+            if event.key in KEYS["singular"] or event.key in KEYS["continious"]:
+                keys.add(event.key)
+        elif event.type == pygame.KEYUP:
+            if event.key in KEYS["continious"]:
+                keys.discard(event.key)
 
 def logicPlayer(obj, keys):
     """
