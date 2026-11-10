@@ -70,6 +70,7 @@ objects = []  # List of objects
 keys = []  # List/set of pressed keys
 bonuses = [] # List of not-activated bonuses
 
+# 
 def spawn(obj):
     """
     Put created object into game
@@ -87,6 +88,7 @@ def action(obj):
         return
     obj["logic"]()
 
+# myka
 def test_collision(index, obj):
     """
     Tests if current object collides with any of other objects
@@ -96,35 +98,41 @@ def test_collision(index, obj):
     """
     pass
 
+# nikita
 def update_coundown(obj):
     """
     Updates all countdowns related to object (for ex. timeout of turrets)
     """
     pass
 
+# lesqu
 def draw(obj):
     """
     Redraw current object
     """
     pass
 
+# nikita
 def draw_score():
     """
     Draws user score and other infos
     """
     pass
 
+# myka
 def clean_objects():
     """
     Removes destroed objects and bonuses from global list
     """
     pass
 
+# myka
 def init():
     """
     Declaration des objet
     """
     pass
+
 
 def moveObject(obj, direction):
     """
@@ -132,12 +140,14 @@ def moveObject(obj, direction):
     """
     pass
 
+# meme que create_bullet, nikita
 def shoot(obj):
     """
     Create a bullet in direction of object
     """
     pass
 
+# nikita
 def parseKeys():
     """
     Detect pressed keys
@@ -161,12 +171,14 @@ def logicEnemy(obj):
     """
     pass
 
+# myka
 def spawnBonus():
     """
     Create a new bonus after timeout and if no bonuses of screen
     """
     pass
 
+# lesqu
 def hurt(obj, ball):
     """
     Reduce hp of object, destroy ball, create collision explosion
@@ -174,6 +186,7 @@ def hurt(obj, ball):
     """
     pass
 
+# myka
 def respawn(obj, pos):
     """
     Recreate destryed object at given position
