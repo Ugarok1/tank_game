@@ -51,7 +51,7 @@ Object = {
         }
 
 Turret = {
-        "reload": None,  # Time between succesive shoots
+        "reload": None,  # Time between succesive shoots, in miliseconds
         "timeout": 0,  # Countdown from the last shot
         }
 
@@ -168,12 +168,24 @@ def test_collision(index, obj):
     """
     pass
 
-# nikita
-def update_coundown(obj):
+# N. Beliy s2604210
+def update_coundown(obj, clock):
     """
-    Updates all countdowns related to object (for ex. timeout of turrets)
+    Recursively updates all countdowns related to object
+    (for ex. timeout of turrets).
+
+    Parameters:
+    -----------
+        obj: dict
+            object to update
+        clock: pygame.time.Clock
+            clock object
     """
-    pass
+    for key, val in obj.items():
+        if key == "timeout" and val > 0:
+            val -= clock.get_time()
+        elif isinstance(val, dict):
+            update_coundown(val, clock)
 
 # lesqu
 def draw(obj):
