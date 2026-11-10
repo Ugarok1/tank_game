@@ -158,6 +158,7 @@ def create_tank(
     return object
 
 
+# Author: Myka
 def create_bonus(basePosition, size, lifetime):
     position = {
         "rect": [basePosition, (10, 10)],
@@ -177,6 +178,18 @@ def create_bonus(basePosition, size, lifetime):
         "team": 3,
     }
     return object
+
+# Author: Myka
+# Clean objects with no life and remove life if no hp left
+def clean_objects():
+    for i in range(len(objects)):
+        if objects[i]["Lives"]["hp"] <= 0:
+            objects[i]["Lives"]["lives"] -= 1 
+        if objects[i]["Lives"]["lives"] <= 0:
+            objects.remove(i)
+
+def test_collision(index, object): 
+    
 
 
 ####################
