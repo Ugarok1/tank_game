@@ -18,53 +18,55 @@ keySpace = pygame.K_SPACE
 ########################
 # If, for ex. movement is None, then object can't be moved
 Object = {
-        "type": None,  # Type of object
-        "name": "",  # Name of object for debug
-        "position": None,  # Will contain position dict for drawing object
-        "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine how object will move
-        "logic": None,  # Will contain pointer to function how object will behave
-        "turret": None,  # Parameters of cannon
-        "bonuses": [],  # List of bonuses affecting object
-        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
-        }
+    "type": None,  # Type of object
+    "name": "",  # Name of object for debug
+    "position": None,  # Will contain position dict for drawing object
+    "health": None,  # Will containg health and life/respawn info
+    "movement": None,  # Will contain seed, that will determine how object will move
+    "logic": None,  # Will contain pointer to function how object will behave
+    "turret": None,  # Parameters of cannon
+    "bonuses": [],  # List of bonuses affecting object
+    "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+}
 
 Turret = {
-        "reload": None,  # Time between succesive shoots
-        "timeout": 0,  # Countdown from the last shot
-        }
+    "reload": None,  # Time between succesive shoots
+    "timeout": 0,  # Countdown from the last shot
+}
 
 Position = {
-        "rect": Pygame.Rectangle(),
-        "direction": 0,
-        "sprite": None,  # init
-        "size": None,  # init int size of square
-        }
+    "rect": Pygame.Rectangle(),
+    "direction": 0,
+    "sprite": None,  # init
+    "size": None,  # init int size of square
+}
 
 Lives = {
-        "hp": None,
-        "max_hp": None,  # init
-        "lives": None,  # init, number of respawns
-        }
+    "hp": None,
+    "max_hp": None,  # init
+    "lives": None,  # init, number of respawns
+}
 
 Movement = {
-        "speed": 0,  # Current speed in direction of object, may be negative
-        "max_speed": None,  # init
-        }
+    "speed": 0,  # Current speed in direction of object, may be negative
+    "max_speed": None,  # init
+}
 
 #########################
 # Global object holders #
 #########################
 objects = []  # List of objects
 keys = []  # List/set of pressed keys
-bonuses = [] # List of not-activated bonuses
+bonuses = []  # List of not-activated bonuses
 
-# 
+
+#
 def spawn(obj):
     """
     Put created object into game
     """
     pass
+
 
 def action(obj):
     """
@@ -77,6 +79,7 @@ def action(obj):
         return
     obj["logic"]()
 
+
 # myka
 def test_collision(index, obj):
     """
@@ -87,12 +90,14 @@ def test_collision(index, obj):
     """
     pass
 
+
 # nikita
 def update_coundown(obj):
     """
     Updates all countdowns related to object (for ex. timeout of turrets)
     """
     pass
+
 
 # lesqu
 def draw(obj):
@@ -101,6 +106,7 @@ def draw(obj):
     """
     pass
 
+
 # nikita
 def draw_score():
     """
@@ -108,12 +114,14 @@ def draw_score():
     """
     pass
 
+
 # myka
 def clean_objects():
     """
     Removes destroed objects and bonuses from global list
     """
     pass
+
 
 # myka
 def init():
@@ -129,6 +137,7 @@ def moveObject(obj, direction):
     """
     pass
 
+
 # meme que create_bullet, nikita
 def shoot(obj):
     """
@@ -136,17 +145,20 @@ def shoot(obj):
     """
     pass
 
+
 # nikita
 def parseKeys():
     """
     Detect pressed keys
     """
 
+
 def logicPlayer(obj, keys):
     """
     Move and shoot based on player input
     """
     pass
+
 
 def logicEnemy(obj):
     """
@@ -160,12 +172,14 @@ def logicEnemy(obj):
     """
     pass
 
+
 # myka
 def spawnBonus():
     """
     Create a new bonus after timeout and if no bonuses of screen
     """
     pass
+
 
 # lesqu
 def hurt(obj, ball):
@@ -175,13 +189,15 @@ def hurt(obj, ball):
     """
     pass
 
+
 # myka
 def respawn(obj, pos):
     """
     Recreate destryed object at given position
     """
     pass
-pygame.draw.rect()
+
+
 
 ###############
 # BASE BALUES #
@@ -190,6 +206,7 @@ base_speed = 5
 base_size = 5
 base_health = 3
 bonus_sprite = "image/bonus.png"
+
 
 ###########
 # OBJECTS #
@@ -244,17 +261,27 @@ def create_bonus(basePosition, size, lifetime):
     }
     return object
 
+
 # Author: Myka
 # Clean objects with no life and remove life if no hp left
 def clean_objects():
     for i in range(len(objects)):
         if objects[i]["Lives"]["hp"] <= 0:
-            objects[i]["Lives"]["lives"] -= 1 
+            objects[i]["Lives"]["lives"] -= 1
         if objects[i]["Lives"]["lives"] <= 0:
             objects.remove(i)
 
-def test_collision(index, object): 
-    
+
+def test_collision(newPosition, object):
+    newObjRect = (newPosition, object["position"]["rect"][1])
+    for i in range(len(objects)):
+        rect = objects[i]["position"]["rect"]
+        answer = pygame.Rect(newObjRect).colliderect(rect)
+        if answer:
+            type = objects[i]["type"]
+            if type == "tank":
+
+
 
 
 ####################
