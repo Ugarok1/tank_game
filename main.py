@@ -218,6 +218,14 @@ def draw_for_object(obj):
         image = pygame.transform.scale(image, ["position"]["rect"][1])
         mainWindow.blit(image, obj["position"]["rect"][0])
 
+#Reduce hp when hit with the bullet
+def hurt(obj, ball):
+    #si collision, alors -hp (pas détruire) SEULEMENT !!! attention ! python veut pas laisser effacer (traduction : POURQUOI ???)
+    hp = hp - 1
+    
+    #NOT FINISHED YET !!!
+
+
 ####################
 # START GAME BLOCK #
 ####################
