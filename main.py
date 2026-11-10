@@ -56,7 +56,7 @@ Turret = {
         }
 
 Position = {
-        "rect": pygame.Rectangle(),
+        "rect": pygame.Rect(),
         "direction": 0,
         "sprite": None,  # init
         "size": None,  # init int size of square
@@ -186,6 +186,10 @@ def update_coundown(obj, clock):
             val -= clock.get_time()
         elif isinstance(val, dict):
             update_coundown(val, clock)
+        elif isinstance(val, list):
+            for v in val:
+                # Danger: may crash on list of not dict
+                update_coundown(v, clock)
 
 # lesqu
 def draw(obj):
