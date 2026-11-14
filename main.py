@@ -198,7 +198,6 @@ def respawn(obj, pos):
     pass
 
 
-
 ###############
 # BASE BALUES #
 ###############
@@ -275,13 +274,12 @@ def clean_objects():
 def test_collision(newPosition, object):
     newObjRect = (newPosition, object["position"]["rect"][1])
     for i in range(len(objects)):
-        rect = objects[i]["position"]["rect"]
-        answer = pygame.Rect(newObjRect).colliderect(rect)
-        if answer:
-            type = objects[i]["type"]
-            if type == "tank":
-
-
+        if objects[i] != object:
+            rect = objects[i]["position"]["rect"]
+            answer = pygame.Rect(newObjRect).colliderect(rect)
+            if answer:
+                objects[i]["collide"](object["type"])
+                object["collide"](objects[i]["type"])
 
 
 ####################
