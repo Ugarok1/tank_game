@@ -13,32 +13,26 @@ keyMoveLeft = pygame.K_LEFT
 keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
 keySpace = pygame.K_SPACE
-###############
-# BASE BALUES #
-###############
-base_speed = 5
-base_size = 5
-base_health = 3
-bonus_sprite = "image/bonus.png"
 
 ########################
 # template for objects #
 ########################
 # If, for ex. movement is None, then object can't be moved
 Object = {
+    "type": None,  # Type of object
+    "name": "",  # Name of object for debug
     "position": None,  # Will contain position dict for drawing object
     "health": None,  # Will containg health and life/respawn info
     "movement": None,  # Will contain seed, that will determine how object will move
     "logic": None,  # Will contain pointer to function how object will behave
-    "turrets": [],  # List of turrets associated to object
+    "collide": None,  # Will contain pointer to function what object do when collide. Input: type of object in collision
+    "turret": None,  # Parameters of cannon
     "bonuses": [],  # List of bonuses affecting object
-    "team": 0,  # If obj frendly, hostile or neutral
+    "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
 }
 
 Turret = {
-    "direction": 0,  # Direction w.r.t. object orientation
     "reload": None,  # Time between succesive shoots
-    "salvo": 1,  # Number of bullets per shot
     "timeout": 0,  # Countdown from the last shot
 }
 
@@ -46,7 +40,7 @@ Position = {
     "rect": Pygame.Rectangle(),
     "direction": 0,
     "sprite": None,  # init
-    "size": None,  # init
+    "size": None,  # init int size of square
 }
 
 Lives = {
@@ -58,7 +52,6 @@ Lives = {
 Movement = {
     "speed": 0,  # Current speed in direction of object, may be negative
     "max_speed": None,  # init
-    "accel": None,  # init
 }
 
 #########################
@@ -88,6 +81,7 @@ def action(obj):
     obj["logic"]()
 
 
+# myka
 def test_collision(index, obj):
     """
     Tests if current object collides with any of other objects
@@ -98,6 +92,7 @@ def test_collision(index, obj):
     pass
 
 
+# nikita
 def update_coundown(obj):
     """
     Updates all countdowns related to object (for ex. timeout of turrets)
@@ -105,6 +100,7 @@ def update_coundown(obj):
     pass
 
 
+# lesqu
 def draw(obj):
     """
     Redraw current object
@@ -112,6 +108,7 @@ def draw(obj):
     pass
 
 
+# nikita
 def draw_score():
     """
     Draws user score and other infos
@@ -119,6 +116,7 @@ def draw_score():
     pass
 
 
+# myka
 def clean_objects():
     """
     Removes destroed objects and bonuses from global list
@@ -126,70 +124,79 @@ def clean_objects():
     pass
 
 
-###########
-# OBJECTS #
-###########
-# Autor: Myka
-def create_tank(
-    basePosition, size, sprite, maxHealth, lives, team, speed, reloadSpeed, logic=None
-):
-    turret = {
-        "direction": 0,
-        "reload": reloadSpeed,
-        "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
-    }
-    position = {
-        "rect": [basePosition, (10, 10)],
-        "direction": 0,
-        "sprite": sprite,
-        "size": size,
-    }
-    lives = {"hp": maxHealth, "max_hp": maxHealth, "lives": lives}
-    mouvement = {"speed": 0, "max_speed": speed}
-    object = {
-        "position": position,
-        "health": lives,
-        "mouvement": mouvement,
-        "logic": logic,
-        "turrets": turret,
-        "bonuses": None,
-        "team": team,  # team 0 - obstacles, team 1 - player, team 2 enemy, team 3 - bonuses
-    }
-    return object
+# myka
+def init():
+    """
+    Declaration des objet
+    """
+    pass
 
 
-# Author: Myka
-def create_bonus(basePosition, size, lifetime):
-    position = {
-        "rect": [basePosition, (10, 10)],
-        "direction": 0,
-        "sprite": bonus_sprite,
-        "size": size,
-    }
-    lives = {"hp": lifetime, "max_hp": lifetime, "lives": 1}
-    mouvement = {"speed": 0, "max_speed": 0}
-    object = {
-        "position": position,
-        "health": lives,
-        "movement": mouvement,
-        "logic": None,
-        "turrets": [],
-        "bonuses": [],
-        "team": 3,
-    }
-    return object
+def moveObject(obj, direction):
+    """
+    Detect if object can move in given direction, then if possible move it
+    """
+    pass
 
-# Author: Myka
-# Clean objects with no life and remove life if no hp left
-def clean_objects():
-    for i in range(len(objects)):
-        if objects[i]["Lives"]["hp"] <= 0:
-            objects[i]["Lives"]["lives"] -= 1 
-        if objects[i]["Lives"]["lives"] <= 0:
-            objects.remove(i)
 
-def test_collision(index, object): 
-    
+# meme que create_bullet, nikita
+def shoot(obj):
+    """
+    Create a bullet in direction of object
+    """
+    pass
+
+
+# nikita
+def parseKeys():
+    """
+    Detect pressed keys
+    """
+
+
+def logicPlayer(obj, keys):
+    """
+    Move and shoot based on player input
+    """
+    pass
+
+
+def logicEnemy(obj):
+    """
+    Move AI tank based on environment
+
+    Variants:
+        random: change direction at random at obstacle
+                and after minimum distance
+        hunter: Actively following player
+        target_shoot: shoot if can hurt player tank
+    """
+    pass
+
+
+# myka
+def spawnBonus():
+    """
+    Create a new bonus after timeout and if no bonuses of screen
+    """
+    pass
+
+
+# lesqu
+def hurt(obj, ball):
+    """
+    Reduce hp of object, destroy ball, create collision explosion
+    Check if object is destroyed
+    """
+    pass
+
+
+# myka
+def respawn(obj, pos):
+    """
+    Recreate destryed object at given position
+    """
+    pass
 
 
 ####################
