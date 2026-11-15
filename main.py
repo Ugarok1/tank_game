@@ -12,47 +12,27 @@ keyMoveRight = pygame.K_RIGHT
 keyMoveLeft = pygame.K_LEFT
 keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
-keySpace = pygame.K_SPACE
+keyShoot = pygame.K_SPACE
 
-########################
-# template for objects #
-########################
-# If, for ex. movement is None, then object can't be moved
-Object = {
-    "type": None,  # Type of object
-    "name": "",  # Name of object for debug
-    "position": None,  # Will contain position dict for drawing object
-    "health": None,  # Will containg health and life/respawn info
-    "movement": None,  # Will contain seed, that will determine how object will move
-    "logic": None,  # Will contain pointer to function how object will behave
-    "collide": None,  # Will contain pointer to function what object do when collide. Input: type of object in collision
-    "turret": None,  # Parameters of cannon
-    "bonuses": [],  # List of bonuses affecting object
-    "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
-}
+keyQuit = pygame.K_q
+keyPause = pygame.K_p
 
-Turret = {
-    "reload": None,  # Time between succesive shoots
-    "timeout": 0,  # Countdown from the last shot
+KEYS = {
+    "singular": set(keyShoot, keyQuit, keyPause),
+    "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight),
 }
+keys = set()
 
-Position = {
-    "rect": Pygame.Rectangle(),
-    "direction": 0,
-    "sprite": None,  # init
-    "size": None,  # init int size of square
-}
+# Directions
+N = 0
+E = 1
+S = 2
+W = 3
 
-Lives = {
-    "hp": None,
-    "max_hp": None,  # init
-    "lives": None,  # init, number of respawns
-}
 
-Movement = {
-    "speed": 0,  # Current speed in direction of object, may be negative
-    "max_speed": None,  # init
-}
+BULLET_SPEED = 10
+BULLET_SIZE = 3
+
 
 #########################
 # Global object holders #
@@ -60,143 +40,352 @@ Movement = {
 objects = []  # List of objects
 keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
+#############
+# MOUVEMENT #
+#############
 
 
-def spawn(obj):
+# Mykhailo SUTYRIN S2601127
+# test collision for all object and apply logic on collision. Output True if collide and False if not
+def test_collision(newPosition, object):
+    newObjRect = (newPosition, object["position"]["rect"][1])
+    for i in range(len(objects)):
+        if objects[i] != object:
+            rect = objects[i]["position"]["rect"]
+            answer = pygame.Rect(newObjRect).colliderect(rect)
+            if answer:
+                copy_object = objects[i].copy
+                copy_operated_object = object.copy
+                apply_collide_logic(object, copy_object)
+                apply_collide_logic(objects[i], copy_operated_object)
+                return True
+            else:
+                return False
+
+
+# Mykhailo SUTYRIN S2601127
+# Take operated object for applying actions on collision, use object as information what type of collision
+def apply_collide_logic(operated_object, object):
+    operated_type = object["type"]
+    operated_team = object["team"]
+    type = object["type"]
+    team = object["team"]
+    if operated_type == "tank" or operated_type == "obstacle":
+        if type == "tank":
+            oper_obj_size = operated_object["position"]["rect"][1]
+            obj_pos = object["position"]["rect"][0]
+            obj_size = object["position"]["rect"][1]
+            if operated_object["position"]["direction"][0] == N:
+                operated_object["position"]["rect"][0][1] = (
+                    obj_pos[1] + obj_size[1] + 1
+                )  # temporaly +1 because I am not sure how pygame works
+            elif operated_object["position"]["direction"][0] == E:
+                operated_object["position"]["rect"][0][0] = (
+                    obj_pos[0] + obj_size[0] + 1
+                )  # temporaly +1 because I am not sure how pygame works
+            elif operated_object["position"]["direction"][0] == S:
+                operated_object["position"]["rect"][0][0] = (
+                    obj_pos[1] - oper_obj_size[1] - 1
+                )  # temporaly +1 because I am not sure how pygame works
+            elif operated_object["position"]["direction"][0] == W:
+                operated_object["position"]["rect"][0][0] = (
+                    obj_pos[0] - oper_obj_size[0] - 1
+                )  # temporaly +1 because I am not sure how pygame works
+            else:
+                print("ERROR, unexpected value of position")
+            if operated_type == "tank" and type == "tank" and operated_team != team:
+                operated_object["Lives"]["hp"] -= 1
+                object["Lives"]["hp"] -= 1
+        if operated_type == "tank" and type == "bullet" and team != operated_team:
+            operated_object["Lives"]["hp"] -= 1
+        if operated_type == "tank" and type == "bonus":
+            add_bonus(operated_object)
+    if operated_type == "bullet" or operated_type == "bonus":
+        objects.remove(operated_object)
+
+
+# Mykhailo SUTYRIN S2601127
+# Test if object on new position pass border or not. Return True or False.
+def test_border(newPosition, object):
+    newObjRect = (newPosition, object["position"]["rect"][1])
+    position = object["position"]["rect"][0]
+    if newObjRect[0][0] < 0:
+        position[0] = 0
+        return True
+    elif newObjRect[0][0] + newObjRect[1][0] > windowSize[0]:
+        position[0] = windowSize[0] - newObjRect[1][0]
+        return True
+    elif newObjRect[0][1] < 0:
+        position[1] = 0
+        return True
+    elif newObjRect[0][1] + newObjRect[1][1] > windowSize[1]:
+        position[1] = windowSize[1] - newObjRect[1][1]
+        return True
+    else:
+        return False
+
+
+# Mykhailo SUTYRIN S2601127
+# Move move object to new position. Return True or false depending on success of mouvement
+def move_object(newPosition, object):
+    collide = test_collision(newPosition, object)
+    border = test_border(newPosition, object)
+    if not border and not collide:
+        object["position"]["rect"][0] = newPosition
+        return True
+    else:
+        return False
+
+
+#################
+# CREATE OBJECT #
+#################
+
+
+# Lesquir Jules s2601624
+def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
+    Position = {
+        "rect": [position, [BLOCK_LENGHT, BLOCK_WIDTH]],
+        "direction": None,
+        "sprite": None,
+        "size": None,
+    }
+    object = {
+        "position": Position,  # Will contain position dict for drawing object
+        "health": None,  # Will containg health and life/respawn info
+        "movement": None,  # Will contain seed, that will determine how object will move
+        "logic": None,  # Will contain pointer to function how object will behave
+        "turret": None,  # Parameters of cannon
+        "bonuses": None,  # List of bonuses affecting object
+        "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+    }
+    return object
+
+
+# N. Beliy s2604210
+def new_bullet(obj):
     """
-    Put created object into game
+    Create a new bullet object in the direction of shooter
+    Bullet is created just outside of shooter box.
+
+    To avoid collision with shooter, bullet must be moved
+    after it's creation
+
+    Parameters:
+    -----------
+        obj: dict
+            Shooter object
+
+    Returns:
+    --------
+        Bullet object
     """
-    pass
+    bullet = {}
+    bullet["type"] = "bullet"
+    bullet["name"] = obj["name"] + "_bullet"
+    # fix position
+    obj_pos = obj["position"]
+    if obj_pos["direction"] == N:
+        point = obj_pos["rect"].midtop
+        point = (point[0] - 0.5 * BULLET_SIZE, point[1] - BULLET_SIZE)
+    elif obj_pos["direction"] == E:
+        point = obj_pos["rect"].midright
+        point = (point[0], point[1] - 0.5 * BULLET_SIZE)
+    elif obj_pos["direction"] == S:
+        point = obj_pos["rect"].midright
+        point = (point[0] - 0.5 * BULLET_SIZE, point[1])
+    elif obj_pos["direction"] == W:
+        point = obj_pos["rect"].midright
+        point = (point[0] - BULLET_SIZE, point[1] - 0.5 * BULLET_SIZE)
+    else:
+        raise Exception(
+            "[{}] Invalid direction: {}".format(obj["name"], obj_pos["direction"])
+        )
+
+    bullet["position"] = {
+        "rect": pygame.Rect((point), (BULLET_SIZE, BULLET_SIZE)),
+        "direction": obj_pos["direction"],
+        "sprite": "images/bullet.png",
+        "size": BULLET_SIZE,
+    }
+
+    bullet["health"] = {"hp": 1, "max_hp": 1, "lives": 0}
+    bullet["movement"] = {"seed": BULLET_SPEED, "max_speed": BULLET_SPEED}
+    bullet["logic"] = None
+    bullet["turret"] = (None,)
+    bullet["bonuses"] = []
+    bullet["team"] = obj["team"]  # TODO: Decide on friendly fire
+    return bullet
 
 
-def action(obj):
-    """
-    Executes object logic if defined, for player-controlled object
-    executes action for pressed keys, for AI-controlled, executes the logic
-
-    Essentualy moves and shoots.
-    """
-    if obj["logic"] is None:
-        return
-    obj["logic"]()
-
-
-# myka
-def test_collision(index, obj):
-    """
-    Tests if current object collides with any of other objects
-
-    If collision is detected, apply collision logic based of
-    nature of colliding objects (ex. bullet with tank)
-    """
-    pass
-
-
-# nikita
-def update_coundown(obj):
-    """
-    Updates all countdowns related to object (for ex. timeout of turrets)
-    """
-    pass
+# Mykhailo SUTYRIN S2601127
+# Create bonus object. Return bonus object
+def create_bonus(basePosition, size, lifetime):
+    position = {
+        "rect": [basePosition, (10, 10)],
+        "direction": 0,
+        "sprite": None,
+        "size": size,
+    }
+    lives = {"hp": lifetime, "max_hp": lifetime, "lives": 1}
+    mouvement = {"speed": 0, "max_speed": 0}
+    object = {
+        "position": position,
+        "health": lives,
+        "movement": mouvement,
+        "logic": None,
+        "turrets": [],
+        "bonuses": [],
+        "team": 3,
+    }
+    return object
 
 
-# lesqu
-def draw(obj):
-    """
-    Redraw current object
-    """
-    pass
+# Mykhailo SUTYRIN S2601127
+# Create tank object. Return tank object
+def create_tank(
+    basePosition, size, sprite, maxHealth, lives, team, speed, reloadSpeed, logic=None
+):
+    turret = {
+        "direction": 0,
+        "reload": reloadSpeed,
+        "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
+    }
+    position = {
+        "rect": [basePosition, (10, 10)],
+        "direction": 0,
+        "sprite": sprite,
+        "size": size,
+    }
+    lives = {"hp": maxHealth, "max_hp": maxHealth, "lives": lives}
+    mouvement = {"speed": 0, "max_speed": speed}
+    object = {
+        "position": position,
+        "health": lives,
+        "mouvement": mouvement,
+        "logic": logic,
+        "turrets": turret,
+        "bonuses": None,
+        "team": team,  # team 0 - obstacles, team 1 - player, team 2 enemy, team 3 - bonuses
+    }
+    return object
 
 
-# nikita
-def draw_score():
-    """
-    Draws user score and other infos
-    """
-    pass
+################
+# TANK ACTIONS #
+################
 
 
-# myka
-def clean_objects():
-    """
-    Removes destroed objects and bonuses from global list
-    """
-    pass
-
-
-# myka
-def init():
-    """
-    Declaration des objet
-    """
-    pass
-
-
-def moveObject(obj, direction):
-    """
-    Detect if object can move in given direction, then if possible move it
-    """
-    pass
-
-
-# meme que create_bullet, nikita
+# N. Beliy s2604210
 def shoot(obj):
     """
-    Create a bullet in direction of object
+    Checks if object can shoot (has turret and not reloading)
+    and create a new bullet.
+
+    Created bullet is moved immediatly and returned.
+
+    Parameters:
+    -----------
+        obj: Object
+            shooter
+
+    Returns:
+    --------
+        Bullet or None
     """
-    pass
+    if obj["turret"] is None or obj["turret"]["timeout"] > 0:
+        # Object can't shoot
+        return None
+
+    obj["turret"]["timeout"] = obj["turret"]["reload"]
+    bullet = new_bullet(obj)
+
+    # TODO: Adding to the list during iteration may cause problems
+    # TODO: Avoid double move
+    moveObject(bullet)
+    return bullet
 
 
-# nikita
-def parseKeys():
-    """
-    Detect pressed keys
-    """
+###########
+# UTILITY #
+###########
 
 
-def logicPlayer(obj, keys):
-    """
-    Move and shoot based on player input
-    """
-    pass
+# Lesquir Jules s2601624
+# Draw objects based on their "type"
+def draw_for_object(obj):
+    if obj["type"] == "obstacle":
+        color = (0, 0, 0)
+        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
+
+    elif obj["type"] == "tank" or obj["type"] == "bullet":
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
+        image = pygame.transform.scale(image, obj["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
+
+    else:
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.scale(image, obj["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
 
 
-def logicEnemy(obj):
+# N. Beliy s2604210
+def update_coundown(obj, clock):
     """
-    Move AI tank based on environment
+    Recursively updates all countdowns related to object
+    (for ex. timeout of turrets).
 
-    Variants:
-        random: change direction at random at obstacle
-                and after minimum distance
-        hunter: Actively following player
-        target_shoot: shoot if can hurt player tank
+    Parameters:
+    -----------
+        obj: dict
+            object to update
+        clock: pygame.time.Clock
+            clock object
     """
-    pass
-
-
-# myka
-def spawnBonus():
-    """
-    Create a new bonus after timeout and if no bonuses of screen
-    """
-    pass
-
-
-# lesqu
-def hurt(obj, ball):
-    """
-    Reduce hp of object, destroy ball, create collision explosion
-    Check if object is destroyed
-    """
-    pass
+    for key, val in obj.items():
+        if key == "timeout" and val > 0:
+            val -= clock.get_time()
+        elif isinstance(val, dict):
+            update_coundown(val, clock)
+        elif isinstance(val, list):
+            for v in val:
+                # Danger: may crash on list of not dict
+                update_coundown(v, clock)
 
 
-# myka
-def respawn(obj, pos):
+# N. Beliy s2604210
+def parseKeys(events):
     """
-    Recreate destryed object at given position
+    Detect pressed keys and put seleted ones in the global keys
+    For continious keys, it also detect unpressing of key.
+
+    Parameters:
+    -----------
+        events: list
+            List of events of pygame
     """
-    pass
+    for event in events:
+        if event.type == pygame.QUIT:
+            keys.add(keyQuit)
+        elif event.type == pygame.KEYDOWN:
+            if event.key in KEYS["singular"] or event.key in KEYS["continious"]:
+                keys.add(event.key)
+        elif event.type == pygame.KEYUP:
+            if event.key in KEYS["continious"]:
+                keys.discard(event.key)
+
+
+# Mykhailo SUTYRIN S2601127
+# Clean objects with no life and remove life if no hp left
+def clean_objects():
+    for i in range(len(objects)):
+        if objects[i]["Lives"]["hp"] <= 0:
+            objects[i]["Lives"]["lives"] -= 1
+        if objects[i]["Lives"]["lives"] <= 0:
+            objects.remove(i)
 
 
 ####################
