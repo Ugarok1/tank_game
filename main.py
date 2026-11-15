@@ -29,10 +29,8 @@ E = 1
 S = 2
 W = 3
 
-
 BULLET_SPEED = 10
 BULLET_SIZE = 3
-
 
 #########################
 # Global object holders #
@@ -40,6 +38,8 @@ BULLET_SIZE = 3
 objects = []  # List of objects
 keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
+
+
 #############
 # MOUVEMENT #
 #############
