@@ -381,7 +381,7 @@ def shoot(obj):
 
 # Lesquir Jules s2601624
 # Draw objects based on their "type"
-def draw_for_object(obj):
+def draw_object(obj):
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
         pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
@@ -475,6 +475,10 @@ while running:
     for event in pygame.event.get():
         pass
     pygame.display.flip()
+    for i in range(len(objects)):
+        moveObject(i)
+        draw_object(objects[i])
+
 
 pygame.display.quit()
 pygame.quit()
