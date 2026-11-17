@@ -436,6 +436,15 @@ def clean_objects():
             objects.remove(i)
 
 
+# N. Beliy s2604210
+def dist2(obj1, obj2):
+    center1 = obj1["position"]["pos"].center
+    center2 = obj2["position"]["pos"].center
+    dx = center1[0] - center2[0]
+    dy = center1[1] - center2[1]
+    return dx * dx + dy * dy
+
+
 #Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
 def hurt(hp):
     hp = hp - 1
