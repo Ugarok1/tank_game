@@ -8,7 +8,9 @@ import time
 backgroundColor = (0, 191, 200)
 
 
-windowSize = (1200, 900)
+# windowSize = (1200, 900)
+windowSize = (800, 600)
+
 
 # Keys
 keyMoveRight = pygame.K_RIGHT
@@ -114,7 +116,7 @@ def moveObject(ind):
     """
     obj = objects[ind]
 
-    if "movement" not in obj:
+    if "movement" not in obj or obj["movement"] is None:
         return
     speed = obj["movement"]["speed"]
     pos = obj["position"]["rect"]
@@ -209,7 +211,10 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         "turret": None,  # Parameters of cannon
         "bonuses": None,  # List of bonuses affecting object
         "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+        "type": "obstacle",
+        "name": ""
     }
+    objects.append(object)
     return object
 
 
@@ -261,11 +266,12 @@ def create_bullet(obj):
     }
 
     bullet["health"] = {"hp": 1, "max_hp": 1, "lives": 0}
-    bullet["movement"] = {"seed": BULLET_SPEED, "max_speed": BULLET_SPEED}
+    bullet["movement"] = {"speed": BULLET_SPEED, "max_speed": BULLET_SPEED}
     bullet["logic"] = None
     bullet["turret"] = (None,)
     bullet["bonuses"] = []
     bullet["team"] = obj["team"]  # TODO: Decide on friendly fire
+    objects.append(bullet)
     return bullet
 
 
@@ -288,7 +294,10 @@ def create_bonus(basePosition, size, lifetime):
         "turrets": [],
         "bonuses": [],
         "team": 3,
+        "type": "bonus",
+        "name": ""
     }
+    objects.append(object)
     return object
 
 
@@ -303,7 +312,7 @@ def create_tank(
         "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
     }
     position = {
-        "rect": pygame.Rect(basePosition, (10, 10)),
+        "rect": pygame.Rect(basePosition, (size, size)),
         "direction": 0,
         "sprite": sprite,
         "size": size,
@@ -318,7 +327,10 @@ def create_tank(
         "turrets": turret,
         "bonuses": None,
         "team": team,  # team 0 - obstacles, team 1 - player, team 2 enemy, team 3 - bonuses
+        "type": "tank",
+        "name": ""
     }
+    objects.append(object)
     return object
 
 
@@ -344,22 +356,69 @@ def shoot(obj):
     --------
         Bullet or None
     """
-    if obj["turret"] is None or obj["turret"]["timeout"] > 0:
+    if obj.get("turrets") is None or obj["turrets"]["timeout"] > 0:
         # Object can't shoot
         return None
 
-    obj["turret"]["timeout"] = obj["turret"]["reload"]
+    obj["turrets"]["timeout"] = obj["turrets"]["reload"]
     bullet = create_bullet(obj)
-
-    # TODO: Adding to the list during iteration may cause problems
-    # TODO: Avoid double move
-    moveObject(bullet)
+    objects.append(bullet)
+    moveObject(len(objects) - 1)
     return bullet
 
 
 # TODO: create func
 def add_bonus(tank):
     return
+
+
+# N. Beliy s2604210
+def applyLogic(ind):
+    """
+    Decide what object must do (move, shoot, etc...) based
+    on environment or user input
+
+    Parameters:
+    -----------
+        ind: int
+            index of object in object list
+    """
+    obj = objects[ind]
+
+    if obj is None or obj.get("logic") is None:
+        return
+
+    obj["logic"](obj)
+
+
+# N. Beliy s2604210
+def user_control(obj):
+    """
+    Reads user commands and apply them to selected tank
+    """
+
+    # Selecting direction
+    direction = None
+    if keyMoveRight in keys:
+        direction = E
+    elif keyMoveLeft:
+        direction = W
+    elif keyMoveUp:
+        direction = N
+    elif keyMoveDown:
+        direction = S
+
+    if direction is not None:
+        # Move object in given direction
+        obj["position"]["direction"] = direction
+        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+    else:
+        # No keys pressed: stop object
+        obj["mouvement"]["speed"] = 0
+
+    if keyShoot in keys:
+        keys.discard(keyShoot)
+        shoot(obj)
 
 
 ###########
@@ -378,14 +437,14 @@ def draw_object(obj):
         imagePath = obj["position"]["sprite"]
         image = pygame.image.load(imagePath).convert_alpha(mainWindow)
         image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
-        image = pygame.transform.scale(image, obj["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
+        image = pygame.transform.scale(image, obj["position"]["rect"].size)
+        mainWindow.blit(image, obj["position"]["rect"].topleft)
 
     else:
         imagePath = obj["position"]["sprite"]
         image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.scale(image, obj["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
+        image = pygame.transform.scale(image, obj["position"]["rect"].size)
+        mainWindow.blit(image, obj["position"]["rect"].topleft)
 
 #S2601624, Lesquir, Jules
 #Reduce hp based on the damages
@@ -462,28 +521,38 @@ def dist2(obj1, obj2):
 pygame.init()
 pygame.key.set_repeat(200, 25)
 
+BLOCK_SIZE = 60
 #S2601624, Lesquir, Jules
 #create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
-create_obstacle(windowSize[0] / 8, windowSize[1] / 6, 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 (windowSize[0] / 4, windowSize[1] / 3))
 
-create_obstacle(windowSize[0] / 8, windowSize[1] / 6, 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 ((windowSize[0] / 8) * 5, windowSize[1] / 3))
 
-create_obstacle(windowSize[0] / 2, windowSize[1] / 6, 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 (windowSize[0] / 4, (windowSize[1] / 6) * 4))
 
-create_obstacle(windowSize[0] / 16, windowSize[1], 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 (0, 0))
 
-create_obstacle(windowSize[0] / 16, windowSize[1], 
-                (windowSize[0] / 16) * 15, 0)
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                ((windowSize[0] / 16) * 15, 0))
 
-create_obstacle(windowSize[0], windowSize[1] / 12, 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 (0, 0))
 
-create_obstacle(windowSize[0], windowSize[1] / 12, 
+create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
                 (0, (windowSize[1] / 12) * 11))
+
+create_tank((60, 60), BLOCK_SIZE, "images/enemy_tank.png",
+            3, 1, 2, 3, 3000)
+create_tank((120, 60), BLOCK_SIZE, "images/enemy_tank.png",
+            3, 1, 2, 3, 3000)
+
+create_tank((500, 400), BLOCK_SIZE, "images/main_tank.png",
+            3, 1, 2, 3, 3000,
+            user_control)
 
 mainWindow = pygame.display.set_mode(windowSize)
 
@@ -495,10 +564,15 @@ running = True
 
 while running:
     parseKeys(pygame.event.get())
-    pygame.display.flip()
+
+    mainWindow.fill(backgroundColor)
     for i in range(len(objects)):
+        applyLogic(i)
         moveObject(i)
         draw_object(objects[i])
+
+    pygame.display.flip()
+    time1.tick(50)
 
 
 pygame.display.quit()
