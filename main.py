@@ -196,7 +196,7 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
         "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
-        
+        "type": "obstacle"
         }
         return object
 
