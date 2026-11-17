@@ -205,17 +205,6 @@ def apply_collide_logic(oper_index, index, new_rect):
         objects.remove(operated_object)
 
 
-# Mykhailo SUTYRIN S2601127
-# Move move object to new position. Return True or false depending on success of mouvement
-def move_object(newPosition, object):
-    collide = test_collision(newPosition, object)
-    if not collide:
-        object["position"]["rect"][0] = newPosition
-        return True
-    else:
-        return False
-
-
 #################
 # CREATE OBJECT #
 #################
