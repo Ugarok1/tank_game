@@ -181,7 +181,7 @@ def respawn(obj, pos):
 #block on the stage (S2601624, Lesquir, Jules)
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         Position = {
-            "rect" : [position, [BLOCK_LENGHT, BLOCK_WIDTH]],
+            "rect" : pygame.rect(position, (BLOCK_LENGHT, BLOCK_WIDTH)),
             "direction" : None
             "sprite" : None
             "size" : None
@@ -218,12 +218,9 @@ def draw_for_object(obj):
         image = pygame.transform.scale(image, ["position"]["rect"][1])
         mainWindow.blit(image, obj["position"]["rect"][0])
 
-#Reduce hp when hit with the bullet
-def hurt(obj, ball):
-    #si collision, alors -hp (pas détruire) SEULEMENT !!! attention ! python veut pas laisser effacer (traduction : POURQUOI ???)
+#Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
+def hurt(hp):
     hp = hp - 1
-    
-    #NOT FINISHED YET !!!
 
 
 ####################
