@@ -346,7 +346,7 @@ def shoot(obj):
         return None
 
     obj["turret"]["timeout"] = obj["turret"]["reload"]
-    bullet = new_bullet(obj)
+    bullet = create_bullet(obj)
 
     # TODO: Adding to the list during iteration may cause problems
     # TODO: Avoid double move
