@@ -37,8 +37,8 @@ keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
 
 KEYS = {
-    "singular": set(keyShoot, keyQuit, keyPause),
-    "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight),
+    "singular": set([keyShoot, keyQuit, keyPause]),
+    "continious": set([keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight]),
 }
 keys = set()
 
