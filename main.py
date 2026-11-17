@@ -232,6 +232,20 @@ def hurt(damage, obj):
 pygame.init()
 pygame.key.set_repeat(200, 25)
 
+#S2601624, Lesquir, Jules
+#create the obstacles, ((x, y), (BLOCK_LENGHT, BLOCK_WICTH))
+obstacle = [
+    (
+        (windowSize[0] / 4, windowSize[1] / 3), (windowSize[0] / 8, windowSize[1] / 8)
+    ),
+    (
+        ((windowSize[0] / 8) *5, windowSize[1] / 3), (windowSize[0] / 8, windowSize[1] / 8)
+    ),
+    (
+        (windowSize[0] / 4, (windowSize[1] / 6) * 4), (windowSize[0] / 2, windowSize[1] / 8)
+    )
+]
+
 mainWindow = pygame.display.set_mode(windowSize)
 
 mainWindow.fill(backgroundColor)
