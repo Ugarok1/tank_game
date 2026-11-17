@@ -243,6 +243,17 @@ create_obstacle(windowSize[0] / 8, windowSize[1] / 6,
 create_obstacle(windowSize[0] / 2, windowSize[1] / 6, 
                 (windowSize[0] / 4, (windowSize[1] / 6) * 4))
 
+create_obstacle(windowSize[0] / 16, windowSize[1], 
+                (0, 0))
+
+create_obstacle(windowSize[0] / 16, windowSize[1], 
+                (windowSize[0] / 16) * 15, 0)
+
+create_obstacle(windowSize[0], windowSize[1] / 12, 
+                (0, 0))
+
+create_obstacle(windowSize[0], windowSize[1] / 12, 
+                (0, (windowSize[1] / 12) * 11))
 
 mainWindow = pygame.display.set_mode(windowSize)
 
