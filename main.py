@@ -37,8 +37,8 @@ keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
 
 KEYS = {
-    "singular": set(keyShoot, keyQuit, keyPause),
-    "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight),
+    "singular": set([keyShoot, keyQuit, keyPause]),
+    "continious": set([keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight]),
 }
 keys = set()
 
@@ -49,41 +49,43 @@ keys = set()
 
 # N. Beliy s2604210
 # To discuss
-def awarness(obj, radius):
-    """
-    Check if any other object is within radius; objects are searched within
-    4 cardinal directions (N, S, E, W). Found closest objects are plased
-    in return list:
-        [obj at N, obj at E, obj at S, obj at W]
-
-    It is intended to be used by computer controlled entities
-
-    Parameters:
-    -----------
-        obj: object to test
-        radius: radius
-
-    Returns:
-    --------
-        list of found objects
-    """
-    obj_pos = obj["position"]["rect"]
-    projection = [
-        pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
-        pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
-        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
-        pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
-    ]
-
-    results = [None, None, None, None]
-
-    for test_obj in objects:
-        test_pos = test_obj["position"]["rect"]
-        for i in range(4):
-            if projection[i].colliderect(test_pos):
-                if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
-                    results[i] = test_obj
-    return results
+# TODO: work on this func
+#
+# def awarness(obj, radius):
+#     """
+#     Check if any other object is within radius; objects are searched within
+#     4 cardinal directions (N, S, E, W). Found closest objects are plased
+#     in return list:
+#         [obj at N, obj at E, obj at S, obj at W]
+#
+#     It is intended to be used by computer controlled entities
+#
+#     Parameters:
+#     -----------
+#         obj: object to test
+#         radius: radius
+#
+#     Returns:
+#     --------
+#         list of found objects
+#     """
+#     obj_pos = obj["position"]["rect"]
+#     projection = [
+#         pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
+#         pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
+#         pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+#         pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
+#     ]
+#
+#     results = [None, None, None, None]
+#
+#     for test_obj in objects:
+#         test_pos = test_obj["position"]["rect"]
+#         for i in range(4):
+#             if projection[i].colliderect(test_pos):
+#                 if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
+#                     results[i] = test_obj
+#     return results
 
 
 # Mykhailo Sutyrin S2601127
@@ -347,12 +349,17 @@ def shoot(obj):
         return None
 
     obj["turret"]["timeout"] = obj["turret"]["reload"]
-    bullet = new_bullet(obj)
+    bullet = create_bullet(obj)
 
     # TODO: Adding to the list during iteration may cause problems
     # TODO: Avoid double move
     moveObject(bullet)
     return bullet
+
+
+# TODO: create func
+def add_bonus(tank):
+    return
 
 
 ###########
@@ -458,8 +465,7 @@ time1 = pygame.time.Clock()
 running = True
 
 while running:
-    for event in pygame.event.get():
-        pass
+    parseKeys(pygame.event.get())
     pygame.display.flip()
     for i in range(len(objects)):
         moveObject(i)
