@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# help
 
 import pygame
 import random
@@ -6,16 +7,40 @@ import time
 
 backgroundColor = (0, 191, 200)
 
+
 windowSize = (1200, 900)
 
+# Keys
 keyMoveRight = pygame.K_RIGHT
 keyMoveLeft = pygame.K_LEFT
 keyMoveUp = pygame.K_UP
 keyMoveDown = pygame.K_DOWN
 keyShoot = pygame.K_SPACE
-
 keyQuit = pygame.K_q
 keyPause = pygame.K_p
+
+# Directions
+N = 0
+E = 1
+S = 2
+W = 3
+
+########################
+# template for objects #
+########################
+# If, for ex. movement is None, then object can't be moved
+
+Object = {
+        "type": None,  # Type of object
+        "name": "",  # Name of object for debug
+        "position": None,  # Will contain position dict for drawing object
+        "health": None,  # Will containg health and life/respawn info
+        "movement": None,  # Will contain seed, that will determine how object will move
+        "logic": None,  # Will contain pointer to function how object will behave
+        "turret": None,  # Parameters of cannon
+        "bonuses": [],  # List of bonuses affecting object
+        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+        }
 
 KEYS = {
     "singular": set(keyShoot, keyQuit, keyPause),
@@ -23,11 +48,12 @@ KEYS = {
 }
 keys = set()
 
-# Directions
-N = 0
-E = 1
-S = 2
-W = 3
+Position = {
+        "rect": [[x, y],[width, lenght]],
+        "direction": 0,
+        "sprite": None,  # init
+        "size": None,  # init int size of square
+        }
 
 BULLET_SPEED = 10
 BULLET_SIZE = 3
@@ -39,11 +65,9 @@ objects = []  # List of objects
 keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
 
-
 #############
 # MOUVEMENT #
 #############
-
 
 # N. Beliy s2604210
 # To discuss
@@ -463,6 +487,50 @@ def clean_objects():
             objects[i]["Lives"]["lives"] -= 1
         if objects[i]["Lives"]["lives"] <= 0:
             objects.remove(i)
+
+#block on the stage (S2601624, Lesquir, Jules)
+def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
+        Position = {
+            "rect" : pygame.rect(position, (BLOCK_LENGHT, BLOCK_WIDTH)),
+            "direction" : None
+            "sprite" : None
+            "size" : None
+
+        }
+        object = {
+        "position": Position,  # Will contain position dict for drawing object
+        "health": None,  # Will containg health and life/respawn info
+        "movement": None,  # Will contain seed, that will determine how object will move
+        "logic": None,  # Will contain pointer to function how object will behave
+        "turret": None,  # Parameters of cannon
+        "bonuses": [],  # List of bonuses affecting object
+        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
+        
+        }
+        return object
+
+#Draw objects based on their "type" (S2601624, Lesquir, Jules)
+def draw_for_object(obj):
+    if obj["type"] == "obstacle":
+        color = (   0,   0,   0)
+        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
+
+    elif obj["type"] == "tank" or obj["type"] =="bullet":
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
+        image = pygame.transform.scale(image, ["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
+
+    else:
+        imagePath = obj["position"]["sprite"]
+        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.scale(image, ["position"]["rect"][1])
+        mainWindow.blit(image, obj["position"]["rect"][0])
+
+#Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
+def hurt(hp):
+    hp = hp - 1
 
 
 ####################
