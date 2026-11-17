@@ -178,7 +178,8 @@ def respawn(obj, pos):
     """
     pass
 
-#block on the stage (S2601624, Lesquir, Jules)
+#S2601624, Lesquir, Jules
+#create obstacles (block,...) on the stage
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         Position = {
             "rect" : pygame.rect(position, (BLOCK_LENGHT, BLOCK_WIDTH)),
@@ -199,7 +200,8 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         }
         return object
 
-#Draw objects based on their "type" (S2601624, Lesquir, Jules)
+#S2601624, Lesquir, Jules
+#Draw objects based on their "type" (obstacle, tank, bullet or sprite)
 def draw_for_object(obj):
     if obj["type"] == "obstacle":
         color = (   0,   0,   0)
@@ -218,7 +220,8 @@ def draw_for_object(obj):
         image = pygame.transform.scale(image, ["position"]["rect"][1])
         mainWindow.blit(image, obj["position"]["rect"][0])
 
-#Reduce hp (S2601624, Lesquir, Jules)
+#S2601624, Lesquir, Jules
+#Reduce hp based on the damages
 def hurt(damage, obj):
     obj["health"]["hp"] -= damage
 
