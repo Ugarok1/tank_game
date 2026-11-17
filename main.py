@@ -45,27 +45,126 @@ bonuses = []  # List of not-activated bonuses
 #############
 
 
-# Mykhailo SUTYRIN S2601127
-# test collision for all object and apply logic on collision. Output True if collide and False if not
-def test_collision(newPosition, object):
-    newObjRect = (newPosition, object["position"]["rect"][1])
-    for i in range(len(objects)):
-        if objects[i] != object:
-            rect = objects[i]["position"]["rect"]
-            answer = pygame.Rect(newObjRect).colliderect(rect)
+# N. Beliy s2604210
+# To discuss
+def awarness(obj, radius):
+    """
+    Check if any other object is within radius; objects are searched within
+    4 cardinal directions (N, S, E, W). Found closest objects are plased
+    in return list:
+        [obj at N, obj at E, obj at S, obj at W]
+
+    It is intended to be used by computer controlled entities
+
+    Parameters:
+    -----------
+        obj: object to test
+        radius: radius
+
+    Returns:
+    --------
+        list of found objects
+    """
+    obj_pos = obj["position"]["rect"]
+    projection = [
+        pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
+        pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
+        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+        pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
+    ]
+
+    results = [None, None, None, None]
+
+    for test_obj in objects:
+        test_pos = test_obj["position"]["rect"]
+        for i in range(4):
+            if projection[i].colliderect(test_pos):
+                if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
+                    results[i] = test_obj
+    return results
+
+
+# Mykhailo Sutyrin S2601127
+# take index and new rectangle. Test collision with all objestc, return bool(True collide ; False not collide) and index of collision
+def test_collision(oper_ind, nex_pos):
+    answer = False
+    for ind in range(len(objects)):
+        if oper_ind != ind:
+            rect2 = objects[ind]["position"]["rect"]
+            answer = nex_pos.colliderect(rect2)
             if answer:
-                copy_object = objects[i].copy
-                copy_operated_object = object.copy
-                apply_collide_logic(object, copy_object)
-                apply_collide_logic(objects[i], copy_operated_object)
-                return True
-            else:
-                return False
+                return answer, ind
+    return answer, None
+
+
+# N. Beliy s2604210
+def moveObject(ind):
+    """
+    Try to move object at index ind, if movement results in collision
+    do appropriate action.
+
+    Parameters:
+    -----------
+        ind: int
+            index of object to move in objects list
+    """
+    obj = objects[ind]
+
+    if "movement" not in obj:
+        return
+    speed = obj["movement"]["speed"]
+    pos = obj["position"]["rect"]
+    direction = obj["position"]["direction"]
+
+    dx = 0
+    dy = 0
+    if direction == N:
+        dy = -speed
+    elif direction == S:
+        dy = speed
+    elif direction == E:
+        dx = speed
+    elif direction == W:
+        dx = -speed
+    else:
+        print(
+            "{}({}): Can't move object -- invalid direction {}".format(
+                obj["name"], obj["type"], direction
+            )
+        )
+        return
+    new_rect = pos.move(dx, dy)
+
+    collision, index = test_collision(ind, new_rect)
+
+    if collision:
+        apply_collide_logic(ind, index)
+        return
+
+    if collision is None:
+        obj["position"]["rect"] = new_rect
+        return
+    #
+    #
+    # # 1. Move object as close to obstacle as possible
+    # if direction == N:
+    #     dy = pos.top - coll_pos.bottom
+    # elif direction == S:
+    #     dy = coll_pos.top - pos.bottom
+    # elif direction == E:
+    #     dx = pos.left - coll_pos.right
+    # elif direction == W:
+    #     dx = coll_pos.left - pos.right
+    # obj["position"]["rect"] = pos.move(dx, dy)
 
 
 # Mykhailo SUTYRIN S2601127
-# Take operated object for applying actions on collision, use object as information what type of collision
-def apply_collide_logic(operated_object, object):
+# TODO REECRIRE POUR RECT
+def apply_collide_logic(oper_index, index):
+    operated_object = objects[oper_index]
+    object = objects[index]
+    if operated_object is None:
+        return
     operated_type = object["type"]
     operated_team = object["team"]
     type = object["type"]
@@ -105,32 +204,10 @@ def apply_collide_logic(operated_object, object):
 
 
 # Mykhailo SUTYRIN S2601127
-# Test if object on new position pass border or not. Return True or False.
-def test_border(newPosition, object):
-    newObjRect = (newPosition, object["position"]["rect"][1])
-    position = object["position"]["rect"][0]
-    if newObjRect[0][0] < 0:
-        position[0] = 0
-        return True
-    elif newObjRect[0][0] + newObjRect[1][0] > windowSize[0]:
-        position[0] = windowSize[0] - newObjRect[1][0]
-        return True
-    elif newObjRect[0][1] < 0:
-        position[1] = 0
-        return True
-    elif newObjRect[0][1] + newObjRect[1][1] > windowSize[1]:
-        position[1] = windowSize[1] - newObjRect[1][1]
-        return True
-    else:
-        return False
-
-
-# Mykhailo SUTYRIN S2601127
 # Move move object to new position. Return True or false depending on success of mouvement
 def move_object(newPosition, object):
     collide = test_collision(newPosition, object)
-    border = test_border(newPosition, object)
-    if not border and not collide:
+    if not collide:
         object["position"]["rect"][0] = newPosition
         return True
     else:
@@ -145,7 +222,7 @@ def move_object(newPosition, object):
 # Lesquir Jules s2601624
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
     Position = {
-        "rect": [position, [BLOCK_LENGHT, BLOCK_WIDTH]],
+        "rect": pygame.Rect(position, [BLOCK_LENGHT, BLOCK_WIDTH]),
         "direction": None,
         "sprite": None,
         "size": None,
@@ -163,7 +240,7 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
 
 
 # N. Beliy s2604210
-def new_bullet(obj):
+def create_bullet(obj):
     """
     Create a new bullet object in the direction of shooter
     Bullet is created just outside of shooter box.
@@ -222,7 +299,7 @@ def new_bullet(obj):
 # Create bonus object. Return bonus object
 def create_bonus(basePosition, size, lifetime):
     position = {
-        "rect": [basePosition, (10, 10)],
+        "rect": pygame.Rect(basePosition, (10, 10)),
         "direction": 0,
         "sprite": None,
         "size": size,
@@ -252,7 +329,7 @@ def create_tank(
         "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
     }
     position = {
-        "rect": [basePosition, (10, 10)],
+        "rect": pygame.Rect(basePosition, (10, 10)),
         "direction": 0,
         "sprite": sprite,
         "size": size,
