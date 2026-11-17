@@ -50,7 +50,7 @@ Position = {
         "size": None,  # init int size of square
         }
 
-Lives = {
+Health = {
         "hp": None,
         "max_hp": None,  # init
         "lives": None,  # init, number of respawns
@@ -218,10 +218,9 @@ def draw_for_object(obj):
         image = pygame.transform.scale(image, ["position"]["rect"][1])
         mainWindow.blit(image, obj["position"]["rect"][0])
 
-#Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
-def hurt(hp):
-    hp = hp - 1
-
+#Reduce hp (S2601624, Lesquir, Jules)
+def hurt(damage, obj):
+    obj["health"]["hp"] -= damage
 
 ####################
 # START GAME BLOCK #
