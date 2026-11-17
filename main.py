@@ -42,49 +42,6 @@ KEYS = {
 }
 keys = set()
 
-########################
-# template for objects #
-########################
-# If, for ex. movement is None, then object can't be moved
-
-Object = {
-        "type": None,  # Type of object
-        "name": "",  # Name of object for debug
-        "position": None,  # Will contain position dict for drawing object
-        "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine
-                           # how object will move
-        "logic": None,  # Will contain pointer to function
-                        # how object will behave
-        "turret": None,  # Parameters of cannon
-        "bonuses": [],  # List of bonuses affecting object
-        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
-        }
-
-Turret = {
-        "reload": None,  # Time between succesive shoots, in miliseconds
-        "timeout": 0,  # Countdown from the last shot
-        }
-
-Position = {
-        "rect": pygame.Rect(),
-        "direction": 0,
-        "sprite": None,  # init
-        "size": None,  # init int size of square
-        }
-
-Lives = {
-        "hp": None,
-        "max_hp": None,  # init
-        "lives": None,  # init, number of respawns,
-                        # TODO: decide starts with 0 or 1
-        }
-
-Movement = {
-        "speed": 0,  # Current speed in direction of object, may be negative
-        "max_speed": None,  # init
-        }
-
 #############
 # MOUVEMENT #
 #############
