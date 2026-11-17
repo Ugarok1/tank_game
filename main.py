@@ -46,43 +46,46 @@ keys = set()
 # MOUVEMENT #
 #############
 
+
 # N. Beliy s2604210
 # To discuss
-def awarness(obj, radius):
-    """
-    Check if any other object is within radius; objects are searched within
-    4 cardinal directions (N, S, E, W). Found closest objects are plased
-    in return list:
-        [obj at N, obj at E, obj at S, obj at W]
-
-    It is intended to be used by computer controlled entities
-
-    Parameters:
-    -----------
-        obj: object to test
-        radius: radius
-
-    Returns:
-    --------
-        list of found objects
-    """
-    obj_pos = obj["position"]["rect"]
-    projection = [
-        pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
-        pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
-        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
-        pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
-    ]
-
-    results = [None, None, None, None]
-
-    for test_obj in objects:
-        test_pos = test_obj["position"]["rect"]
-        for i in range(4):
-            if projection[i].colliderect(test_pos):
-                if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
-                    results[i] = test_obj
-    return results
+# TODO: work on this func
+#
+# def awarness(obj, radius):
+#     """
+#     Check if any other object is within radius; objects are searched within
+#     4 cardinal directions (N, S, E, W). Found closest objects are plased
+#     in return list:
+#         [obj at N, obj at E, obj at S, obj at W]
+#
+#     It is intended to be used by computer controlled entities
+#
+#     Parameters:
+#     -----------
+#         obj: object to test
+#         radius: radius
+#
+#     Returns:
+#     --------
+#         list of found objects
+#     """
+#     obj_pos = obj["position"]["rect"]
+#     projection = [
+#         pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
+#         pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
+#         pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+#         pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
+#     ]
+#
+#     results = [None, None, None, None]
+#
+#     for test_obj in objects:
+#         test_pos = test_obj["position"]["rect"]
+#         for i in range(4):
+#             if projection[i].colliderect(test_pos):
+#                 if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
+#                     results[i] = test_obj
+#     return results
 
 
 # Mykhailo Sutyrin S2601127
@@ -139,41 +142,39 @@ def moveObject(ind):
     collision, index = test_collision(ind, new_rect)
 
     if collision:
-        apply_collide_logic(ind, index)
+        apply_collide_logic(ind, index, new_rect)
         return
+
 
 # Mykhailo SUTYRIN S2601127
 # TODO REECRIRE POUR RECT
-def apply_collide_logic(oper_index, index):
+def apply_collide_logic(oper_index, index, new_rect):
+    if objects[oper_index] is None:
+        return
+
     operated_object = objects[oper_index]
     object = objects[index]
-    if operated_object is None:
-        return
+
+    oper_rect = operated_object["position"]["rect"]
+    rect = object["position"]["rect"]
+
     operated_type = object["type"]
     operated_team = object["team"]
+
     type = object["type"]
     team = object["team"]
     if operated_type == "tank" or operated_type == "obstacle":
         if type == "tank":
-            oper_obj_size = operated_object["position"]["rect"][1]
-            obj_pos = object["position"]["rect"][0]
-            obj_size = object["position"]["rect"][1]
+            oper_obj_size = (oper_rect.width, oper_rect.height)
+            obj_size = (rect.width, rect.height)
             if operated_object["position"]["direction"][0] == N:
-                operated_object["position"]["rect"][0][1] = (
-                    obj_pos[1] + obj_size[1] + 1
-                )  # temporaly +1 because I am not sure how pygame works
+                oper_rect.move_ip(oper_rect.x, rect.bottim + 1)
             elif operated_object["position"]["direction"][0] == E:
-                operated_object["position"]["rect"][0][0] = (
-                    obj_pos[0] + obj_size[0] + 1
-                )  # temporaly +1 because I am not sure how pygame works
+                oper_rect.move_ip(rect.right + 1, oper_rect.y)
             elif operated_object["position"]["direction"][0] == S:
-                operated_object["position"]["rect"][0][0] = (
-                    obj_pos[1] - oper_obj_size[1] - 1
-                )  # temporaly +1 because I am not sure how pygame works
+                oper_rect.move_ip(oper_rect.x, rect.top - oper_rect.height - 1)
             elif operated_object["position"]["direction"][0] == W:
-                operated_object["position"]["rect"][0][0] = (
-                    obj_pos[0] - oper_obj_size[0] - 1
-                )  # temporaly +1 because I am not sure how pygame works
+                oper_rect.move_ip(rect.left, oper_rect.y)
             else:
                 print("ERROR, unexpected value of position")
             if operated_type == "tank" and type == "tank" and operated_team != team:
@@ -192,6 +193,7 @@ def apply_collide_logic(oper_index, index):
 #################
 
 # Lesquir Jules s2601624
+#create obstacles (block,...) on the stage
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
     Position = {
         "rect": pygame.Rect(position, [BLOCK_LENGHT, BLOCK_WIDTH]),
@@ -324,6 +326,7 @@ def create_tank(
 # TANK ACTIONS #
 ################
 
+
 # N. Beliy s2604210
 def shoot(obj):
     """
@@ -354,6 +357,11 @@ def shoot(obj):
     return bullet
 
 
+# TODO: create func
+def add_bonus(tank):
+    return
+
+
 ###########
 # UTILITY #
 ###########
@@ -361,7 +369,7 @@ def shoot(obj):
 
 # Lesquir Jules s2601624
 # Draw objects based on their "type"
-def draw_for_object(obj):
+def draw_object(obj):
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
         pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
@@ -379,6 +387,10 @@ def draw_for_object(obj):
         image = pygame.transform.scale(image, obj["position"]["rect"][1])
         mainWindow.blit(image, obj["position"]["rect"][0])
 
+#S2601624, Lesquir, Jules
+#Reduce hp based on the damages
+def hurt(damage, obj):
+    obj["health"]["hp"] -= damage
 
 # N. Beliy s2604210
 def update_coundown(obj, clock):
@@ -435,7 +447,6 @@ def clean_objects():
         if objects[i]["Lives"]["lives"] <= 0:
             objects.remove(i)
 
-
 # N. Beliy s2604210
 def dist2(obj1, obj2):
     center1 = obj1["position"]["pos"].center
@@ -444,18 +455,35 @@ def dist2(obj1, obj2):
     dy = center1[1] - center2[1]
     return dx * dx + dy * dy
 
-
-#Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
-def hurt(hp):
-    hp = hp - 1
-
-
 ####################
 # START GAME BLOCK #
 ####################
 
 pygame.init()
 pygame.key.set_repeat(200, 25)
+
+#S2601624, Lesquir, Jules
+#create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
+create_obstacle(windowSize[0] / 8, windowSize[1] / 6, 
+                (windowSize[0] / 4, windowSize[1] / 3))
+
+create_obstacle(windowSize[0] / 8, windowSize[1] / 6, 
+                ((windowSize[0] / 8) * 5, windowSize[1] / 3))
+
+create_obstacle(windowSize[0] / 2, windowSize[1] / 6, 
+                (windowSize[0] / 4, (windowSize[1] / 6) * 4))
+
+create_obstacle(windowSize[0] / 16, windowSize[1], 
+                (0, 0))
+
+create_obstacle(windowSize[0] / 16, windowSize[1], 
+                (windowSize[0] / 16) * 15, 0)
+
+create_obstacle(windowSize[0], windowSize[1] / 12, 
+                (0, 0))
+
+create_obstacle(windowSize[0], windowSize[1] / 12, 
+                (0, (windowSize[1] / 12) * 11))
 
 mainWindow = pygame.display.set_mode(windowSize)
 
@@ -466,9 +494,12 @@ time1 = pygame.time.Clock()
 running = True
 
 while running:
-    for event in pygame.event.get():
-        pass
+    parseKeys(pygame.event.get())
     pygame.display.flip()
+    for i in range(len(objects)):
+        moveObject(i)
+        draw_object(objects[i])
+
 
 pygame.display.quit()
 pygame.quit()
