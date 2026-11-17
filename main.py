@@ -25,6 +25,23 @@ E = 1
 S = 2
 W = 3
 
+# Bullets parameters
+BULLET_SPEED = 10
+BULLET_SIZE = 3
+
+#########################
+# Global object holders #
+#########################
+objects = []  # List of objects
+keys = []  # List/set of pressed keys
+bonuses = []  # List of not-activated bonuses
+
+KEYS = {
+    "singular": set(keyShoot, keyQuit, keyPause),
+    "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight),
+}
+keys = set()
+
 ########################
 # template for objects #
 ########################
@@ -35,35 +52,38 @@ Object = {
         "name": "",  # Name of object for debug
         "position": None,  # Will contain position dict for drawing object
         "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine how object will move
-        "logic": None,  # Will contain pointer to function how object will behave
+        "movement": None,  # Will contain seed, that will determine
+                           # how object will move
+        "logic": None,  # Will contain pointer to function
+                        # how object will behave
         "turret": None,  # Parameters of cannon
         "bonuses": [],  # List of bonuses affecting object
         "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
         }
 
-KEYS = {
-    "singular": set(keyShoot, keyQuit, keyPause),
-    "continious": set(keyMoveLeft, keyMoveUp, keyMoveDown, keyMoveRight),
-}
-keys = set()
+Turret = {
+        "reload": None,  # Time between succesive shoots, in miliseconds
+        "timeout": 0,  # Countdown from the last shot
+        }
 
 Position = {
-        "rect": [[x, y],[width, lenght]],
+        "rect": pygame.Rect(),
         "direction": 0,
         "sprite": None,  # init
         "size": None,  # init int size of square
         }
 
-BULLET_SPEED = 10
-BULLET_SIZE = 3
+Lives = {
+        "hp": None,
+        "max_hp": None,  # init
+        "lives": None,  # init, number of respawns,
+                        # TODO: decide starts with 0 or 1
+        }
 
-#########################
-# Global object holders #
-#########################
-objects = []  # List of objects
-keys = []  # List/set of pressed keys
-bonuses = []  # List of not-activated bonuses
+Movement = {
+        "speed": 0,  # Current speed in direction of object, may be negative
+        "max_speed": None,  # init
+        }
 
 #############
 # MOUVEMENT #
@@ -165,23 +185,6 @@ def moveObject(ind):
         apply_collide_logic(ind, index)
         return
 
-    if collision is None:
-        obj["position"]["rect"] = new_rect
-        return
-    #
-    #
-    # # 1. Move object as close to obstacle as possible
-    # if direction == N:
-    #     dy = pos.top - coll_pos.bottom
-    # elif direction == S:
-    #     dy = coll_pos.top - pos.bottom
-    # elif direction == E:
-    #     dx = pos.left - coll_pos.right
-    # elif direction == W:
-    #     dx = coll_pos.left - pos.right
-    # obj["position"]["rect"] = pos.move(dx, dy)
-
-
 # Mykhailo SUTYRIN S2601127
 # TODO REECRIRE POUR RECT
 def apply_collide_logic(oper_index, index):
@@ -227,21 +230,9 @@ def apply_collide_logic(oper_index, index):
         objects.remove(operated_object)
 
 
-# Mykhailo SUTYRIN S2601127
-# Move move object to new position. Return True or false depending on success of mouvement
-def move_object(newPosition, object):
-    collide = test_collision(newPosition, object)
-    if not collide:
-        object["position"]["rect"][0] = newPosition
-        return True
-    else:
-        return False
-
-
 #################
 # CREATE OBJECT #
 #################
-
 
 # Lesquir Jules s2601624
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
@@ -376,7 +367,6 @@ def create_tank(
 # TANK ACTIONS #
 ################
 
-
 # N. Beliy s2604210
 def shoot(obj):
     """
@@ -488,45 +478,6 @@ def clean_objects():
         if objects[i]["Lives"]["lives"] <= 0:
             objects.remove(i)
 
-#block on the stage (S2601624, Lesquir, Jules)
-def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
-        Position = {
-            "rect" : pygame.rect(position, (BLOCK_LENGHT, BLOCK_WIDTH)),
-            "direction" : None
-            "sprite" : None
-            "size" : None
-
-        }
-        object = {
-        "position": Position,  # Will contain position dict for drawing object
-        "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine how object will move
-        "logic": None,  # Will contain pointer to function how object will behave
-        "turret": None,  # Parameters of cannon
-        "bonuses": [],  # List of bonuses affecting object
-        "team": 0  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
-        
-        }
-        return object
-
-#Draw objects based on their "type" (S2601624, Lesquir, Jules)
-def draw_for_object(obj):
-    if obj["type"] == "obstacle":
-        color = (   0,   0,   0)
-        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
-
-    elif obj["type"] == "tank" or obj["type"] =="bullet":
-        imagePath = obj["position"]["sprite"]
-        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
-        image = pygame.transform.scale(image, ["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
-
-    else:
-        imagePath = obj["position"]["sprite"]
-        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.scale(image, ["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
 
 #Reduce hp when hit with the bullet (S2601624, Lesquir, Jules)
 def hurt(hp):
