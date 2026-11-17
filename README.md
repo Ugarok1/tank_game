@@ -50,11 +50,12 @@ Explode action from bullet create orange circle for 3 seconds on position where 
 - lives: int ; how many times can respawn
 - health: int ; how many health does tank has
 - speed: int ; base speed, how fast it moves in general, not at this moment
+- size: int ; size define general size of an object
 #### Blueprint bullet
 - type: (obstacle/tank/bullet/explosion...)
 - movement: `[direction, currentSpeed]`
 - speed: int ; base speed, how fast it moves in general, not at this moment
-#### Blueprint 
+#### Blueprint explosion
 - type: (obstacle/tank/bullet/explosion...)
 - lifeTime: int ; decrease number on every frame, if 0 delete object
 
