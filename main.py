@@ -159,14 +159,72 @@ def action(obj):
     obj["logic"]()
 
 # myka
-def test_collision(index, obj):
+def test_collision(index, new_pos):
     """
-    Tests if current object collides with any of other objects
-
-    If collision is detected, apply collision logic based of
-    nature of colliding objects (ex. bullet with tank)
+    Modified!
+    Checks if any object starting from index collides with
+    rectangle at new_pos.
+    Returns first found colliding object, or None if
+    no collision detected.
     """
     pass
+
+
+# N. Beliy s2604210
+# To discuss
+def awarness(obj, radius):
+    """
+    Check if any other object is within radius; objects are searched within
+    4 cardinal directions (N, S, E, W). Found closest objects are plased
+    in return list:
+        [obj at N, obj at E, obj at S, obj at W]
+
+    It is intended to be used by computer controlled entities
+
+    Parameters:
+    -----------
+        obj: object to test
+        radius: radius
+
+    Returns:
+    --------
+        list of found objects
+    """
+    obj_pos = obj["position"]["rect"]
+    projection = [
+        pygame.Rect(obj_pos.left, obj_pos.top + radius,
+                    obj_pos.width, radius),
+        pygame.Rect(obj_pos.right + radius, obj_pos.top,
+                    radius, obj_pos.height),
+        pygame.Rect(obj_pos.left, obj_pos.bottom,
+                    obj_pos.width, radius),
+        pygame.Rect(obj_pos.left - radius, obj_pos.top,
+                    radius, obj_pos.height)
+        ]
+
+    results = [None, None, None, None]
+
+    for test_obj in objects:
+        test_pos = test_obj["position"]["rect"]
+        for i in range(4):
+            if projection[i].colliderect(test_pos):
+                if results[i] is None or \
+                   dist2(obj, results[i]) > dist2(obj, test_obj):
+                    results[i] = test_obj
+    return results
+
+
+def dist2(obj1, obj2):
+    """
+    Returns squared distance between centers of 2 objects
+    """
+    pos1 = obj1["position"]["rect"]
+    pos2 = obj2["position"]["rect"]
+    dx = pos1.midtop - pos2.midtop
+    dy = pos2.midleft - pos2.midleft
+
+    return (dx * dx + dy * dy)
+
 
 # N. Beliy s2604210
 def update_coundown(obj, clock):
@@ -220,11 +278,64 @@ def init():
     pass
 
 
-def moveObject(obj):
+# N. Beliy s2604210
+# to discuss
+def moveObject(ind):
     """
-    Detect if object can move in given direction, then if possible move it
+    Try to move object at index ind, if movement results in collision
+    do appropriate action.
+
+    Parameters:
+    -----------
+        ind: int
+            index of object to move in objects list
     """
-    pass
+    obj = objects[ind]
+
+    if "movement" not in obj:
+        return
+    speed = obj["movement"]["speed"]
+    pos = obj["position"]["rect"]
+    direction = obj["position"]["direction"]
+
+    dx = 0
+    dy = 0
+    if direction == N:
+        dy = -speed
+    elif direction == S:
+        dy = speed
+    elif direction == E:
+        dx = speed
+    elif direction == W:
+        dx = -speed
+    else:
+        print("{}({}): Can't move object -- invalid direction {}"
+              .format(obj["name"], obj["type"], direction))
+        return
+    new_pos = pos.move(dx, dy)
+
+    collision = test_collision(ind + 1, new_pos)
+    coll_pos = collision["position"]["rect"]
+    coll_dir = collision["position"]["direction"]
+    coll_team = collision["team"]
+
+    if collision is None:
+        obj["position"]["rect"] = new_pos
+        return
+
+    # 1. Move object as close to obstacle as possible
+    if direction == N:
+        dy = pos.top - coll_pos.bottom
+    elif direction == S:
+        dy = coll_pos.top - pos.bottom
+    elif direction == E:
+        dx = pos.left - coll_pos.right
+    elif direction == W:
+        dx = coll_pos.left - pos.right
+    obj["position"]["rect"] = pos.move(dx, dy)
+
+    # 2. Check for objects types and sides, and apply harm if needed
+
 
 # N. Beliy s2604210
 def shoot(obj):
