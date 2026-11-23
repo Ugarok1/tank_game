@@ -28,14 +28,13 @@ S = 2
 W = 3
 
 # Bullets parameters
-BULLET_SPEED = 10
-BULLET_SIZE = 3
+BULLET_SPEED = 5
+BULLET_SIZE = 5
 
 #########################
 # Global object holders #
 #########################
 objects = []  # List of objects
-keys = []  # List/set of pressed keys
 bonuses = []  # List of not-activated bonuses
 
 KEYS = {
@@ -116,11 +115,22 @@ def moveObject(ind):
     """
     obj = objects[ind]
 
-    if "movement" not in obj or obj["movement"] is None:
+    if objects[ind] is None:
         return
-    speed = obj["movement"]["speed"]
+
+    if "mouvement" not in obj or obj["mouvement"] is None:
+        return
+
+    speed = obj["mouvement"]["speed"]
     pos = obj["position"]["rect"]
     direction = obj["position"]["direction"]
+
+    if speed == 0:
+        return
+
+    if obj["name"] == "user_bullet":
+        print("Moving {} ({}) by {} pixels in direction {}"
+              .format(obj["name"], obj["type"], speed, direction))
 
     dx = 0
     dy = 0
@@ -142,17 +152,22 @@ def moveObject(ind):
     new_rect = pos.move(dx, dy)
 
     collision, index = test_collision(ind, new_rect)
-
     if collision:
-        apply_collide_logic(ind, index, new_rect)
-        return
+        if obj["name"] == "user_bullet":
+            print("{} ({}) collides with {} ({})"
+                  .format(obj["name"], obj["type"],
+                          objects[index]["name"],
+                          objects[index]["type"]))
+        new_rect = apply_collide_logic(ind, index, new_rect)
+
+    obj["position"]["rect"] = new_rect
+    print(new_rect.topleft)
+    print(new_rect.bottomright)
 
 
 # Mykhailo SUTYRIN S2601127
 # TODO REECRIRE POUR RECT
 def apply_collide_logic(oper_index, index, new_rect):
-    if objects[oper_index] is None:
-        return
 
     operated_object = objects[oper_index]
     object = objects[index]
@@ -160,34 +175,50 @@ def apply_collide_logic(oper_index, index, new_rect):
     oper_rect = operated_object["position"]["rect"]
     rect = object["position"]["rect"]
 
-    operated_type = object["type"]
-    operated_team = object["team"]
+    operated_type = operated_object["type"]
+    operated_team = operated_object["team"]
 
     type = object["type"]
     team = object["team"]
-    if operated_type == "tank" or operated_type == "obstacle":
-        if type == "tank":
-            oper_obj_size = (oper_rect.width, oper_rect.height)
-            obj_size = (rect.width, rect.height)
-            if operated_object["position"]["direction"][0] == N:
-                oper_rect.move_ip(oper_rect.x, rect.bottim + 1)
-            elif operated_object["position"]["direction"][0] == E:
-                oper_rect.move_ip(rect.right + 1, oper_rect.y)
-            elif operated_object["position"]["direction"][0] == S:
-                oper_rect.move_ip(oper_rect.x, rect.top - oper_rect.height - 1)
-            elif operated_object["position"]["direction"][0] == W:
-                oper_rect.move_ip(rect.left, oper_rect.y)
-            else:
-                print("ERROR, unexpected value of position")
-            if operated_type == "tank" and type == "tank" and operated_team != team:
-                operated_object["Lives"]["hp"] -= 1
-                object["Lives"]["hp"] -= 1
-        if operated_type == "tank" and type == "bullet" and team != operated_team:
-            operated_object["Lives"]["hp"] -= 1
-        if operated_type == "tank" and type == "bonus":
-            add_bonus(operated_object)
+
+    # First, move operated_object close to collided object
+    dx = 0
+    dy = 0
+    direction = operated_object["position"]["direction"]
+    if direction == N:
+        dy = rect.bottom - oper_rect.top
+    elif direction == S:
+        dy = rect.top - oper_rect.bottom
+    elif direction == E:
+        dx = rect.left - oper_rect.right
+    elif direction == W:
+        dx = rect.right - oper_rect.left
+    oper_rect = oper_rect.move(dx, dy)
+
+    enemy = True
+    if operated_team == 0 or team == 0:
+        enemy = False
+
+    if operated_team == team:
+        # No frendly fire
+        enemy = False
+
+    if operated_type == "tank" and enemy:
+        print("Hurting operated tank")
+        hurt(1, operated_object)
+
+    if type == "tank" and enemy:
+        print("Hurting static tank")
+        hurt(1, object)
+
     if operated_type == "bullet" or operated_type == "bonus":
-        objects.remove(operated_object)
+        hurt(1, operated_object)
+        print("Removing bullet")
+
+    if type == "bullet" or type == "bonus":
+        hurt(1, object)
+
+    return oper_rect
 
 
 #################
@@ -214,7 +245,6 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
         "type": "obstacle",
         "name": ""
     }
-    objects.append(object)
     return object
 
 
@@ -242,36 +272,37 @@ def create_bullet(obj):
     # fix position
     obj_pos = obj["position"]
     if obj_pos["direction"] == N:
-        point = obj_pos["rect"].midtop
-        point = (point[0] - 0.5 * BULLET_SIZE, point[1] - BULLET_SIZE)
+        point = (obj_pos["rect"].centerx - int(BULLET_SIZE / 2),
+                 obj_pos["rect"].top - BULLET_SIZE)
     elif obj_pos["direction"] == E:
-        point = obj_pos["rect"].midright
-        point = (point[0], point[1] - 0.5 * BULLET_SIZE)
+        point = (obj_pos["rect"].right,
+                 obj_pos["rect"].centery - int(BULLET_SIZE / 2))
     elif obj_pos["direction"] == S:
-        point = obj_pos["rect"].midright
-        point = (point[0] - 0.5 * BULLET_SIZE, point[1])
+        point = (obj_pos["rect"].centerx - int(BULLET_SIZE / 2),
+                 obj_pos["rect"].bottom)
     elif obj_pos["direction"] == W:
-        point = obj_pos["rect"].midright
-        point = (point[0] - BULLET_SIZE, point[1] - 0.5 * BULLET_SIZE)
+        point = (obj_pos["rect"].left - BULLET_SIZE,
+                 obj_pos["rect"].centery - int(BULLET_SIZE / 2))
     else:
         raise Exception(
             "[{}] Invalid direction: {}".format(obj["name"], obj_pos["direction"])
         )
 
+    sprite = pygame.image.load("images/bullet2.png")
+    sprite = pygame.transform.scale(sprite, (BULLET_SIZE, BULLET_SIZE))
     bullet["position"] = {
         "rect": pygame.Rect((point), (BULLET_SIZE, BULLET_SIZE)),
         "direction": obj_pos["direction"],
-        "sprite": "images/bullet.png",
+        "sprite": sprite,
         "size": BULLET_SIZE,
     }
 
-    bullet["health"] = {"hp": 1, "max_hp": 1, "lives": 0}
-    bullet["movement"] = {"speed": BULLET_SPEED, "max_speed": BULLET_SPEED}
+    bullet["health"] = {"hp": 1, "max_hp": 1, "lives": 1}
+    bullet["mouvement"] = {"speed": BULLET_SPEED, "max_speed": BULLET_SPEED}
     bullet["logic"] = None
     bullet["turret"] = (None,)
     bullet["bonuses"] = []
     bullet["team"] = obj["team"]  # TODO: Decide on friendly fire
-    objects.append(bullet)
     return bullet
 
 
@@ -297,7 +328,6 @@ def create_bonus(basePosition, size, lifetime):
         "type": "bonus",
         "name": ""
     }
-    objects.append(object)
     return object
 
 
@@ -311,6 +341,9 @@ def create_tank(
         "reload": reloadSpeed,
         "timeout": 0,  # set at reloadSpeed on shoot, then every second -1 till 0, when 0 can shoot again
     }
+
+    sprite = pygame.image.load(sprite)
+    sprite = pygame.transform.scale(sprite, (size, size))
     position = {
         "rect": pygame.Rect(basePosition, (size, size)),
         "direction": 0,
@@ -330,7 +363,6 @@ def create_tank(
         "type": "tank",
         "name": ""
     }
-    objects.append(object)
     return object
 
 
@@ -351,20 +383,17 @@ def shoot(obj):
     -----------
         obj: Object
             shooter
-
-    Returns:
-    --------
-        Bullet or None
     """
     if obj.get("turrets") is None or obj["turrets"]["timeout"] > 0:
         # Object can't shoot
+        print("Can't shoot: {}".format(obj["turrets"]["timeout"]))
         return None
 
     obj["turrets"]["timeout"] = obj["turrets"]["reload"]
     bullet = create_bullet(obj)
     objects.append(bullet)
     moveObject(len(objects) - 1)
-    return bullet
+    print("Shooting done")
 
 
 # TODO: create func
@@ -401,22 +430,23 @@ def user_control(obj):
     direction = None
     if keyMoveRight in keys:
         direction = E
-    elif keyMoveLeft:
+    elif keyMoveLeft in keys:
         direction = W
-    elif keyMoveUp:
+    elif keyMoveUp in keys:
         direction = N
-    elif keyMoveDown:
+    elif keyMoveDown in keys:
         direction = S
 
-    if direction is not None:
+    if direction is None:
+        # No direction keys pressed: stop object
+        obj["mouvement"]["speed"] = 0
+    else:
         # Move object in given direction
         obj["position"]["direction"] = direction
         obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-    else:
-        # No keys pressed: stop object
-        obj["mouvement"]["speed"] = 0
 
     if keyShoot in keys:
+        print("Shooting...")
         keys.discard(keyShoot)
         shoot(obj)
 
@@ -429,21 +459,27 @@ def user_control(obj):
 # Lesquir Jules s2601624
 # Draw objects based on their "type"
 def draw_object(obj):
+    if obj is None:
+        return
+
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
         pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
 
     elif obj["type"] == "tank" or obj["type"] == "bullet":
-        imagePath = obj["position"]["sprite"]
-        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
-        image = pygame.transform.scale(image, obj["position"]["rect"].size)
+        image = obj["position"]["sprite"].convert_alpha(mainWindow)
+        # image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.rotate(image, -90 * obj["position"]["direction"])
+        # image = pygame.transform.scale(image, obj["position"]["rect"].size)
         mainWindow.blit(image, obj["position"]["rect"].topleft)
+        color = (255, 0, 0)
+        pygame.draw.rect(mainWindow, color, obj["position"]["rect"], width=1)
 
     else:
-        imagePath = obj["position"]["sprite"]
-        image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.scale(image, obj["position"]["rect"].size)
+        image = obj["position"]["sprite"].convert_alpha(mainWindow)
+        # image = pygame.image.load(imagePath).convert_alpha(mainWindow)
+        image = pygame.transform.rotate(image, -90 * obj["position"]["direction"])
+        # image = pygame.transform.scale(image, obj["position"]["rect"].size)
         mainWindow.blit(image, obj["position"]["rect"].topleft)
 
 #S2601624, Lesquir, Jules
@@ -464,9 +500,13 @@ def update_coundown(obj, clock):
         clock: pygame.time.Clock
             clock object
     """
+    if obj is None:
+        return
+
     for key, val in obj.items():
         if key == "timeout" and val > 0:
-            val -= clock.get_time()
+            # get_time returns in miliseconds
+            obj[key] -= clock.get_time() / 1000
         elif isinstance(val, dict):
             update_coundown(val, clock)
         elif isinstance(val, list):
@@ -489,22 +529,31 @@ def parseKeys(events):
     for event in events:
         if event.type == pygame.QUIT:
             keys.add(keyQuit)
+            print("Quitting...")
         elif event.type == pygame.KEYDOWN:
             if event.key in KEYS["singular"] or event.key in KEYS["continious"]:
                 keys.add(event.key)
+                print("Key {} pressed".format(event.key))
         elif event.type == pygame.KEYUP:
             if event.key in KEYS["continious"]:
                 keys.discard(event.key)
+                print("Key {} unpressed".format(event.key))
 
 
 # Mykhailo SUTYRIN S2601127
 # Clean objects with no life and remove life if no hp left
 def clean_objects():
+    global objects
     for i in range(len(objects)):
-        if objects[i]["Lives"]["hp"] <= 0:
-            objects[i]["Lives"]["lives"] -= 1
-        if objects[i]["Lives"]["lives"] <= 0:
-            objects.remove(i)
+        health = objects[i].get("health")
+        if health is not None:
+            if objects[i]["health"]["hp"] <= 0:
+                objects[i]["health"]["lives"] -= 1
+            if objects[i]["health"]["lives"] <= 0:
+                objects[i] = None
+    objects = [obj for obj in objects
+               if obj is not None]
+
 
 # N. Beliy s2604210
 def dist2(obj1, obj2):
@@ -519,40 +568,58 @@ def dist2(obj1, obj2):
 ####################
 
 pygame.init()
-pygame.key.set_repeat(200, 25)
+# pygame.key.set_repeat(200, 25)
 
 BLOCK_SIZE = 60
 #S2601624, Lesquir, Jules
 #create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                (windowSize[0] / 4, windowSize[1] / 3))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                        (windowSize[0] / 4, windowSize[1] / 3))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                ((windowSize[0] / 8) * 5, windowSize[1] / 3))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                        ((windowSize[0] / 8) * 5, windowSize[1] / 3))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                (windowSize[0] / 4, (windowSize[1] / 6) * 4))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                        (windowSize[0] / 4, (windowSize[1] / 6) * 4))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                (0, 0))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                ((windowSize[0] / 16) * 15, 0))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                        ((windowSize[0] / 16) * 15, 0))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                (0, 0))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0))
+        )
 
-create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                (0, (windowSize[1] / 12) * 11))
+objects.append(
+        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
+                        (0, (windowSize[1] / 12) * 11))
+        )
 
-create_tank((60, 60), BLOCK_SIZE, "images/enemy_tank.png",
-            3, 1, 2, 3, 3000)
-create_tank((120, 60), BLOCK_SIZE, "images/enemy_tank.png",
-            3, 1, 2, 3, 3000)
+objects.append(
+        create_tank((60, 60), BLOCK_SIZE, "images/enemy_tank.png",
+                    3, 1, 2, 3, 3)
+        )
+objects.append(
+        create_tank((120, 60), BLOCK_SIZE, "images/enemy_tank.png",
+                    3, 1, 2, 3, 3)
+        )
 
-create_tank((500, 400), BLOCK_SIZE, "images/main_tank.png",
-            3, 1, 2, 3, 3000,
-            user_control)
+objects.append(
+        create_tank((500, 400), BLOCK_SIZE, "images/main_tank.png",
+                    3, 1, 1, 3, 3, user_control)
+        )
+objects[-1]["name"] = "user"
 
 mainWindow = pygame.display.set_mode(windowSize)
 
@@ -567,9 +634,13 @@ while running:
 
     mainWindow.fill(backgroundColor)
     for i in range(len(objects)):
+        update_coundown(objects[i], time1)
         applyLogic(i)
         moveObject(i)
+
+    for i in range(len(objects)):
         draw_object(objects[i])
+    clean_objects()
 
     pygame.display.flip()
     time1.tick(50)
