@@ -33,6 +33,7 @@ W = 3
 # Bullets parameters
 BULLET_SPEED = 5
 BULLET_SIZE = 5
+VISION_DISTANCE = 50000  # in px^2
 
 #########################
 # Global object holders #
@@ -697,36 +698,83 @@ def standart_logic(obj):
     """
     vision = awarness(obj, 500)
     tmp = -1
-    for i in vision:
-        tmp += 1
-        # scan for enemy shoot and move to it
-        if not (i is None) and i["type"] == "tank" and i["team"] != obj["team"]:
-            # enemy detected North
-            if tmp == 0:
-                # move closer verticaly if not close enough
-                obj["position"]["direction"] = 0
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            # enemy detected West
-            if tmp == 1:
-                obj["position"]["direction"] = 3
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            # enemy detected South
-            if tmp == 2:
-                obj["position"]["direction"] = 2
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            # enemy detected East
-            if tmp == 3:
-                obj["position"]["direction"] = 1
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-    do_wander(obj)
+    for enemy in objects:
+        # ensure it's enemy
+        if (
+            enemy != None
+            and enemy.get("type") == "tank"
+            and enemy.get("team") != obj.get("team")
+        ):
+            distance_en_2 = dist2(obj, enemy)
+            if distance_en_2 >= VISION_DISTANCE:
+                see_enemy = True
+                for obstacle in objects:
+                    # ensure it's obstacle and obstacle collide with line(distance between enemy and main object)
+                    if obstacle.get("type") == "obstacle" and obstacle.get(
+                        "rect"
+                    ).clipline(obj.get("rect").center, objects[i].get("rect").center):
+                        see_enemy = False
+                if see_enemy:
+                    dist_x = (
+                        enemy["position"]["rect"].centerx
+                        - obj["position"]["rect"].centerx
+                    )
+                    dist_y = (
+                        enemy["position"]["rect"].centery
+                        - obj["position"]["rect"].centery
+                    )
+                    if dist_x < dist_y:
+                        # if distance on ax is small enough move in direction of enemy and shoot
+                        if -10 < dist_x and dist_x < 10:
+                            # enemy is South
+                            if dist_y > 0:
+                                obj["position"]["direction"] = 2
+                                obj["mouvement"]["speed"] = obj.get("max_speed")
+                                shoot(obj)
+                                return
+                            # enemy is North
+                            elif dist_y < 0:
+                                obj["position"]["direction"] = 0
+                                obj["mouvement"]["speed"] = obj.get("max_speed")
+                                shoot(obj)
+                                return
+                            else:
+                                print("ERROR: object is inside another object!")
+                        elif dist_x < 0:
+                            obj["position"]["direction"] = 1
+                            obj["mouvement"]["speed"] = obj.get("max_speed")
+                            return
+                        elif dist_x > 0:
+                            obj["position"]["direction"] = 3
+                            obj["mouvement"]["speed"] = obj.get("max_speed")
+                            return
+                    elif dist_x > dist_y:
+                        # if distance on ax is small enough move in direction of enemy and shoot
+                        if -10 > dist_y and dist_y < 10:
+                            # enemy is West
+                            if dist_y > 0:
+                                obj["position"]["direction"] = 3
+                                obj["mouvement"]["speed"] = obj.get("max_speed")
+                                shoot(obj)
+                                return
+                            # enemy is East
+                            elif dist_y < 0:
+                                obj["position"]["direction"] = 1
+                                obj["mouvement"]["speed"] = obj.get("max_speed")
+                                shoot(obj)
+                                return
+                            else:
+                                print("ERROR: object is inside another object!")
+                        elif dist_y < 0:
+                            obj["position"]["direction"] = 1
+                            obj["mouvement"]["speed"] = obj.get("max_speed")
+                            return
+                        elif dist_x > 0:
+                            obj["position"]["direction"] = 2
+                            obj["mouvement"]["speed"] = obj.get("max_speed")
+                            return
+                else:
+                    do_wander(obj)
 
 
 ####################
