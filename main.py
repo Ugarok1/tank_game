@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # help
 
+import math
+
 import pygame
 import random
 import time
@@ -49,50 +51,22 @@ keys = set()
 #############
 
 
-# N. Beliy s2604210
-# To discuss
-# TODO: work on this func
-#
-# def awarness(obj, radius):
-#     """
-#     Check if any other object is within radius; objects are searched within
-#     4 cardinal directions (N, S, E, W). Found closest objects are plased
-#     in return list:
-#         [obj at N, obj at E, obj at S, obj at W]
-#
-#     It is intended to be used by computer controlled entities
-#
-#     Parameters:
-#     -----------
-#         obj: object to test
-#         radius: radius
-#
-#     Returns:
-#     --------
-#         list of found objects
-#     """
-#     obj_pos = obj["position"]["rect"]
-#     projection = [
-#         pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
-#         pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
-#         pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
-#         pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
-#     ]
-#
-#     results = [None, None, None, None]
-#
-#     for test_obj in objects:
-#         test_pos = test_obj["position"]["rect"]
-#         for i in range(4):
-#             if projection[i].colliderect(test_pos):
-#                 if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
-#                     results[i] = test_obj
-#     return results
-
-
 # Mykhailo Sutyrin S2601127
 # take index and new rectangle. Test collision with all objestc, return bool(True collide ; False not collide) and index of collision
 def test_collision(oper_ind, nex_pos):
+    """
+    Test collision with all objestc
+
+    Parameters:
+    ---
+        oper_ind - index of object we work with
+        new_pos - new rectangle of object
+
+    Returns:
+    ---
+        bool(True collide ; False not collide)
+        index of collided object
+    """
     answer = False
     for ind in range(len(objects)):
         if oper_ind != ind:
@@ -113,6 +87,7 @@ def moveObject(ind):
     -----------
         ind: int
             index of object to move in objects list
+    #MAIN_LOOP
     """
     obj = objects[ind]
 
@@ -167,8 +142,18 @@ def moveObject(ind):
 
 
 # Mykhailo SUTYRIN S2601127
-# TODO REECRIRE POUR RECT
 def apply_collide_logic(oper_index, index, new_rect):
+    """
+    Apply collision logic to operated object and type of collision.
+
+    Parameters:
+    ---
+        oper_index - index of operated object
+        index - index of object in collision
+        new_rect - new rectangle of operated object
+    """
+    if objects[oper_index] is None:
+        return
 
     operated_object = objects[oper_index]
     object = objects[index]
@@ -226,8 +211,9 @@ def apply_collide_logic(oper_index, index, new_rect):
 # CREATE OBJECT #
 #################
 
+
 # Lesquir Jules s2601624
-#create obstacles (block,...) on the stage
+# create obstacles (block,...) on the stage
 def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
     Position = {
         "rect": pygame.Rect(position, [BLOCK_LENGHT, BLOCK_WIDTH]),
@@ -308,8 +294,19 @@ def create_bullet(obj):
 
 
 # Mykhailo SUTYRIN S2601127
-# Create bonus object. Return bonus object
 def create_bonus(basePosition, size, lifetime):
+    """
+    Create bonus object.
+
+    Parameters:
+    ---
+        basePosition: initial position of the object
+        size: size of object
+        lifetime: amount of seconds bonus will live
+    Returns:
+    ---
+        bonus object
+    """
     position = {
         "rect": pygame.Rect(basePosition, (10, 10)),
         "direction": 0,
@@ -332,11 +329,28 @@ def create_bonus(basePosition, size, lifetime):
     return object
 
 
-# Mykhailo SUTYRIN S2601127
-# Create tank object. Return tank object
+# M. Sutyrin S2601127
 def create_tank(
     basePosition, size, sprite, maxHealth, lives, team, speed, reloadSpeed, logic=None
 ):
+    """
+    Create new tank object.
+
+    Parameters:
+    ---
+        basePosition: initial position ([int,int])
+        size: size of tank (int)
+        sprite: sprite of tank
+        maxHealth: hp maximum de tank
+        lives: number of lives
+        team: team of the tank
+        speed: speed of the tank
+        reloadSpeed: number of seconds object need to shoot again
+        logc: function of logic
+    Returns:
+    ---
+        tank object
+    """
     turret = {
         "direction": 0,
         "reload": reloadSpeed,
@@ -459,10 +473,11 @@ def user_control(obj):
 
 # Lesquir Jules s2601624
 # Draw objects based on their "type"
+
+
 def draw_object(obj):
     if obj is None:
         return
-
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
         pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
@@ -481,16 +496,19 @@ def draw_object(obj):
         color = (255, 0, 0)
         pygame.draw.rect(mainWindow, color, obj["position"]["rect"], width=1)
 
-#S2601624, Lesquir, Jules
-#Reduce hp based on the damages
+
+# S2601624, Lesquir, Jules
+# Reduce hp based on the damages
 def hurt(damage, obj):
     obj["health"]["hp"] -= damage
+
 
 # N. Beliy s2604210
 def update_coundown(obj, clock):
     """
     Recursively updates all countdowns related to object
     (for ex. timeout of turrets).
+    #MAIN_LOOP
 
     Parameters:
     -----------
@@ -539,9 +557,11 @@ def parseKeys(events):
                 print("Key {} unpressed".format(event.key))
 
 
-# Mykhailo SUTYRIN S2601127
-# Clean objects with no life and remove life if no hp left
+# S. Mykhailo S2601127
 def clean_objects():
+    """
+    Clean objects with no life and remove life if no hp left.
+    """
     global objects
     for i in range(len(objects)):
         health = objects[i].get("health")
@@ -553,21 +573,192 @@ def clean_objects():
     objects = [obj for obj in objects
                if obj is not None]
 
+###################
+# ENEMY LOGIC(AI) #
+###################
+
+
+# S. Mykhailo S2601127
+# TODO: possible bug if walls aren't fat enough
+def dist2(obj1, obj2):
+    """
+    Return squared distance between 2 objects.
+
+    Parameters:
+    ---
+        obj1: first object
+        obj2: second object
+
+    Returns:
+    ---
+        float distance
+    """
+    center1 = obj1["position"]["rect"].center
+    center2 = obj2["position"]["rect"].center
+
+    distance = (center1[0] - center1[0]) ** 2 +\
+            (center1[1] - center1[1]) ** 2
+    return distance
+
 
 # N. Beliy s2604210
-def dist2(obj1, obj2):
-    center1 = obj1["position"]["pos"].center
-    center2 = obj2["position"]["pos"].center
-    dx = center1[0] - center2[0]
-    dy = center1[1] - center2[1]
-    return dx * dx + dy * dy
+def awarness(obj, radius):
+    """
+    Check if any other object is within radius; objects are searched within
+    4 cardinal directions (N, S, E, W). Found closest objects are plased
+    in return list:
+        [obj at N, obj at E, obj at S, obj at W]
+
+    It is intended to be used by computer controlled entities
+
+    Parameters:
+    -----------
+        obj: object to test
+        radius: radius
+
+    Returns:
+    --------
+        list of found objects
+    """
+    obj_pos = obj["position"]["rect"]
+    projections = [
+        pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
+        pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
+        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+        pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
+    ]
+
+    results = [None, None, None, None]
+
+    for test_obj in objects:
+        test_rect = test_obj["position"]["rect"]
+        # gives 0,1,2,3
+        for i in range(4):
+            if projections[i].colliderect(test_rect):
+                if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
+                    results[i] = test_obj
+    return results
+
+
+# S. Mykhailo S2601127
+def do_wander(obj):
+    """
+    Wander randomly around, don't move in direction where is an obstacle.
+
+    Parameters:
+    ---
+        obj - object to wander
+    """
+    random.seed()
+
+    near = awarness(obj, 20)
+    # standart direction pool
+    standart_direction_pool = [0, 1, 2, 3]
+    tmp = 0
+    obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+    # randomly change direction if current direction face an obstacle
+    for i in near:
+        if not (i is None):
+            standart_direction_pool.remove(tmp)
+            tmp += 1
+            if obj["position"]["direction"] == tmp:
+                obj["position"]["direction"] = random.randint(
+                    0, len(standart_direction_pool) - 1
+                )
+                return
+    # randomly change direction, or leave previous direction
+    rand = random.randint(0, 10)
+    for i in standart_direction_pool:
+        if rand == i:
+            obj["position"]["direction"] = i
+            return
+
+
+# S. Mykhailo S2601127
+def standart_logic(obj):
+    """
+    Scan in range for enemy tanks, shoot and move to them. Stop mouvement if distance is less then number of pixels.
+
+    Moves randomly if no enemy in range, bypass obstacles with left hand rule.
+
+    Parameters:
+    ---
+        obj: object to apply
+    """
+    vision = awarness(obj, 50)
+    tmp = 0
+    for i in vision:
+        # scan for enemy shoot and move to it
+        if not (i is None) and i["type"] == "tank" and i["team"] != obj["team"]:
+            match tmp:
+                # enemy detected North
+                case 0:
+                    if obj["position"]["rect"].x > i["position"]["rect"].x:
+                        obj["position"]["direction"] = 1
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    elif obj["position"]["rect"].x < i["position"]["rect"].x:
+                        obj["position"]["direction"] = 3
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    else:
+                        obj["position"]["direction"] = 0
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        shoot(obj)
+                        return
+                # enemy detected East
+                case 1:
+                    if obj["position"]["rect"].y > i["position"]["rect"].y:
+                        obj["position"]["direction"] = 0
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    elif obj["position"]["rect"].y < i["position"]["rect"].y:
+                        obj["position"]["direction"] = 2
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    else:
+                        obj["position"]["direction"] = 1
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        shoot(obj)
+                        return
+                # enemy detected South
+                case 2:
+                    if obj["position"]["rect"].x > i["position"]["rect"].x:
+                        obj["position"]["direction"] = 1
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    elif obj["position"]["rect"].x < i["position"]["rect"].x:
+                        obj["position"]["direction"] = 3
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    else:
+                        obj["position"]["direction"] = 2
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        shoot(obj)
+                        return
+                # enemy detected West
+                case 3:
+                    if obj["position"]["rect"].y > i["position"]["rect"].y:
+                        obj["position"]["direction"] = 0
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    elif obj["position"]["rect"].y < i["position"]["rect"].y:
+                        obj["position"]["direction"] = 2
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        return
+                    else:
+                        obj["position"]["direction"] = 3
+                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        shoot(obj)
+                        return
+    do_wander(obj)
+
 
 ####################
 # START GAME BLOCK #
 ####################
 
 pygame.init()
-# pygame.key.set_repeat(200, 25)
 
 BLOCK_SIZE = 60
 #S2601624, Lesquir, Jules
@@ -607,11 +798,11 @@ objects.append(
 
 objects.append(
         create_tank((60, 60), BLOCK_SIZE, "images/enemy_tank.png",
-                    3, 1, 2, 3, 3)
+                    3, 1, 2, 3, 3, standart_logic)
         )
 objects.append(
         create_tank((120, 60), BLOCK_SIZE, "images/enemy_tank.png",
-                    3, 1, 2, 3, 3)
+                    3, 1, 2, 3, 3, standart_logic)
         )
 
 objects.append(
