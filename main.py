@@ -465,7 +465,7 @@ def draw_object(obj):
 
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
-        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
+        pygame.draw.rect(mainWindow, color, [obj["position"]["rect"].x, obj["position"]["rect"].y])
 
     elif obj["type"] == "tank" or obj["type"] == "bullet":
         image = obj["position"]["sprite"].convert_alpha(mainWindow)
