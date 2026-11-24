@@ -372,20 +372,20 @@ def add_bonus(tank):
 def draw_object(obj):
     if obj["type"] == "obstacle":
         color = (0, 0, 0)
-        pygame.draw.rect(mainWindow, color, obj["position"]["rect"])
+        pygame.draw.rect(mainWindow, color, [obj["position"]["rect"].x, obj["position"]["rect"].y])
 
     elif obj["type"] == "tank" or obj["type"] == "bullet":
-        imagePath = obj["position"]["sprite"]
+        imagePath = [obj["position"]["sprite"].x, obj["position"]["sprite"].y]
         image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.rotate(image, 90 * obj["position"]["direction"])
-        image = pygame.transform.scale(image, obj["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
+        image = pygame.transform.rotate(image, 90 * [obj["position"]["direction"].x, obj["position"]["direction"].y])
+        image = pygame.transform.scale(image, obj["position"]["rect"].y)
+        mainWindow.blit(image, obj["position"]["rect"].x)
 
     else:
         imagePath = obj["position"]["sprite"]
         image = pygame.image.load(imagePath).convert_alpha(mainWindow)
-        image = pygame.transform.scale(image, obj["position"]["rect"][1])
-        mainWindow.blit(image, obj["position"]["rect"][0])
+        image = pygame.transform.scale(image, obj["position"]["rect"].x)
+        mainWindow.blit(image, obj["position"]["rect"].y)
 
 #S2601624, Lesquir, Jules
 #Reduce hp based on the damages
