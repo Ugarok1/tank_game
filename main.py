@@ -5,12 +5,13 @@ import pygame
 import random
 import time
 
+DEBUG = True
+
 backgroundColor = (0, 191, 200)
 
 
 # windowSize = (1200, 900)
 windowSize = (800, 600)
-
 
 # Keys
 keyMoveRight = pygame.K_RIGHT
@@ -468,19 +469,17 @@ def draw_object(obj):
 
     elif obj["type"] == "tank" or obj["type"] == "bullet":
         image = obj["position"]["sprite"].convert_alpha(mainWindow)
-        # image = pygame.image.load(imagePath).convert_alpha(mainWindow)
         image = pygame.transform.rotate(image, -90 * obj["position"]["direction"])
-        # image = pygame.transform.scale(image, obj["position"]["rect"].size)
         mainWindow.blit(image, obj["position"]["rect"].topleft)
-        color = (255, 0, 0)
-        pygame.draw.rect(mainWindow, color, obj["position"]["rect"], width=1)
 
     else:
         image = obj["position"]["sprite"].convert_alpha(mainWindow)
-        # image = pygame.image.load(imagePath).convert_alpha(mainWindow)
         image = pygame.transform.rotate(image, -90 * obj["position"]["direction"])
-        # image = pygame.transform.scale(image, obj["position"]["rect"].size)
         mainWindow.blit(image, obj["position"]["rect"].topleft)
+
+    if DEBUG:
+        color = (255, 0, 0)
+        pygame.draw.rect(mainWindow, color, obj["position"]["rect"], width=1)
 
 #S2601624, Lesquir, Jules
 #Reduce hp based on the damages
