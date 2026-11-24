@@ -80,7 +80,7 @@ def test_collision(oper_ind, nex_pos):
 # N. Beliy s2604210
 def moveObject(ind):
     """
-    Try to move object at index ind, if movement results in collision
+    Try to move object at index ind, if mouvement results in collision
     do appropriate action.
 
     Parameters:
@@ -105,8 +105,11 @@ def moveObject(ind):
         return
 
     if obj["name"] == "user_bullet":
-        print("Moving {} ({}) by {} pixels in direction {}"
-              .format(obj["name"], obj["type"], speed, direction))
+        print(
+            "Moving {} ({}) by {} pixels in direction {}".format(
+                obj["name"], obj["type"], speed, direction
+            )
+        )
 
     dx = 0
     dy = 0
@@ -130,10 +133,14 @@ def moveObject(ind):
     collision, index = test_collision(ind, new_rect)
     if collision:
         if obj["name"] == "user_bullet":
-            print("{} ({}) collides with {} ({})"
-                  .format(obj["name"], obj["type"],
-                          objects[index]["name"],
-                          objects[index]["type"]))
+            print(
+                "{} ({}) collides with {} ({})".format(
+                    obj["name"],
+                    obj["type"],
+                    objects[index]["name"],
+                    objects[index]["type"],
+                )
+            )
         new_rect = apply_collide_logic(ind, index, new_rect)
 
     obj["position"]["rect"] = new_rect
@@ -224,13 +231,13 @@ def create_obstacle(BLOCK_LENGHT, BLOCK_WIDTH, position):
     object = {
         "position": Position,  # Will contain position dict for drawing object
         "health": None,  # Will containg health and life/respawn info
-        "movement": None,  # Will contain seed, that will determine how object will move
+        "mouvement": None,  # Will contain seed, that will determine how object will move
         "logic": None,  # Will contain pointer to function how object will behave
         "turret": None,  # Parameters of cannon
         "bonuses": None,  # List of bonuses affecting object
         "team": 0,  # If obj frendly(1), hostile(2) or neutral(0), bonus(3)
         "type": "obstacle",
-        "name": ""
+        "name": "",
     }
     return object
 
@@ -259,17 +266,19 @@ def create_bullet(obj):
     # fix position
     obj_pos = obj["position"]
     if obj_pos["direction"] == N:
-        point = (obj_pos["rect"].centerx - int(BULLET_SIZE / 2),
-                 obj_pos["rect"].top - BULLET_SIZE)
+        point = (
+            obj_pos["rect"].centerx - int(BULLET_SIZE / 2),
+            obj_pos["rect"].top - BULLET_SIZE,
+        )
     elif obj_pos["direction"] == E:
-        point = (obj_pos["rect"].right,
-                 obj_pos["rect"].centery - int(BULLET_SIZE / 2))
+        point = (obj_pos["rect"].right, obj_pos["rect"].centery - int(BULLET_SIZE / 2))
     elif obj_pos["direction"] == S:
-        point = (obj_pos["rect"].centerx - int(BULLET_SIZE / 2),
-                 obj_pos["rect"].bottom)
+        point = (obj_pos["rect"].centerx - int(BULLET_SIZE / 2), obj_pos["rect"].bottom)
     elif obj_pos["direction"] == W:
-        point = (obj_pos["rect"].left - BULLET_SIZE,
-                 obj_pos["rect"].centery - int(BULLET_SIZE / 2))
+        point = (
+            obj_pos["rect"].left - BULLET_SIZE,
+            obj_pos["rect"].centery - int(BULLET_SIZE / 2),
+        )
     else:
         raise Exception(
             "[{}] Invalid direction: {}".format(obj["name"], obj_pos["direction"])
@@ -318,13 +327,13 @@ def create_bonus(basePosition, size, lifetime):
     object = {
         "position": position,
         "health": lives,
-        "movement": mouvement,
+        "mouvement": mouvement,
         "logic": None,
         "turrets": [],
         "bonuses": [],
         "team": 3,
         "type": "bonus",
-        "name": ""
+        "name": "",
     }
     return object
 
@@ -376,7 +385,7 @@ def create_tank(
         "bonuses": None,
         "team": team,  # team 0 - obstacles, team 1 - player, team 2 enemy, team 3 - bonuses
         "type": "tank",
-        "name": ""
+        "name": "",
     }
     return object
 
@@ -570,8 +579,8 @@ def clean_objects():
                 objects[i]["health"]["lives"] -= 1
             if objects[i]["health"]["lives"] <= 0:
                 objects[i] = None
-    objects = [obj for obj in objects
-               if obj is not None]
+    objects = [obj for obj in objects if obj is not None]
+
 
 ###################
 # ENEMY LOGIC(AI) #
@@ -596,8 +605,7 @@ def dist2(obj1, obj2):
     center1 = obj1["position"]["rect"].center
     center2 = obj2["position"]["rect"].center
 
-    distance = (center1[0] - center1[0]) ** 2 +\
-            (center1[1] - center1[1]) ** 2
+    distance = (center1[0] - center1[0]) ** 2 + (center1[1] - center1[1]) ** 2
     return distance
 
 
@@ -695,60 +703,60 @@ def standart_logic(obj):
                 case 0:
                     if obj["position"]["rect"].x > i["position"]["rect"].x:
                         obj["position"]["direction"] = 1
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     elif obj["position"]["rect"].x < i["position"]["rect"].x:
                         obj["position"]["direction"] = 3
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     else:
                         obj["position"]["direction"] = 0
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         shoot(obj)
                         return
                 # enemy detected East
                 case 1:
                     if obj["position"]["rect"].y > i["position"]["rect"].y:
                         obj["position"]["direction"] = 0
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     elif obj["position"]["rect"].y < i["position"]["rect"].y:
                         obj["position"]["direction"] = 2
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     else:
                         obj["position"]["direction"] = 1
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         shoot(obj)
                         return
                 # enemy detected South
                 case 2:
                     if obj["position"]["rect"].x > i["position"]["rect"].x:
                         obj["position"]["direction"] = 1
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     elif obj["position"]["rect"].x < i["position"]["rect"].x:
                         obj["position"]["direction"] = 3
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     else:
                         obj["position"]["direction"] = 2
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         shoot(obj)
                         return
                 # enemy detected West
                 case 3:
                     if obj["position"]["rect"].y > i["position"]["rect"].y:
                         obj["position"]["direction"] = 0
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     elif obj["position"]["rect"].y < i["position"]["rect"].y:
                         obj["position"]["direction"] = 2
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         return
                     else:
                         obj["position"]["direction"] = 3
-                        obj["movement"]["speed"] = obj["mouvement"]["max_speed"]
+                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
                         shoot(obj)
                         return
     do_wander(obj)
@@ -761,54 +769,48 @@ def standart_logic(obj):
 pygame.init()
 
 BLOCK_SIZE = 60
-#S2601624, Lesquir, Jules
-#create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
+# S2601624, Lesquir, Jules
+# create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
 objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                        (windowSize[0] / 4, windowSize[1] / 3))
-        )
+    create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, windowSize[1] / 3))
+)
 
 objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                        ((windowSize[0] / 8) * 5, windowSize[1] / 3))
-        )
+    create_obstacle(
+        BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 8) * 5, windowSize[1] / 3)
+    )
+)
 
 objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                        (windowSize[0] / 4, (windowSize[1] / 6) * 4))
-        )
+    create_obstacle(
+        BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, (windowSize[1] / 6) * 4)
+    )
+)
+
+objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
+
+objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 16) * 15, 0)))
+
+objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
+
+objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, (windowSize[1] / 12) * 11)))
 
 objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0))
-        )
+    create_tank(
+        (60, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 3, 3, standart_logic
+    )
+)
+objects.append(
+    create_tank(
+        (120, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 3, 3, standart_logic
+    )
+)
 
 objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                        ((windowSize[0] / 16) * 15, 0))
-        )
-
-objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0))
-        )
-
-objects.append(
-        create_obstacle(BLOCK_SIZE, BLOCK_SIZE,
-                        (0, (windowSize[1] / 12) * 11))
-        )
-
-objects.append(
-        create_tank((60, 60), BLOCK_SIZE, "images/enemy_tank.png",
-                    3, 1, 2, 3, 3, standart_logic)
-        )
-objects.append(
-        create_tank((120, 60), BLOCK_SIZE, "images/enemy_tank.png",
-                    3, 1, 2, 3, 3, standart_logic)
-        )
-
-objects.append(
-        create_tank((500, 400), BLOCK_SIZE, "images/main_tank.png",
-                    3, 1, 1, 3, 3, user_control)
-        )
+    create_tank(
+        (500, 400), BLOCK_SIZE, "images/main_tank.png", 3, 1, 1, 3, 3, user_control
+    )
+)
 objects[-1]["name"] = "user"
 
 mainWindow = pygame.display.set_mode(windowSize)
