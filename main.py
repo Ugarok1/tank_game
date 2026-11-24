@@ -602,10 +602,11 @@ def dist2(obj1, obj2):
     ---
         float distance
     """
-    center1 = obj1["position"]["rect"].center
-    center2 = obj2["position"]["rect"].center
-
-    distance = (center1[0] - center1[0]) ** 2 + (center1[1] - center1[1]) ** 2
+    distance = (
+        obj1["position"]["rect"].center[0] - obj2["position"]["rect"].center[0]
+    ) ** 2 + (
+        obj1["position"]["rect"].center[1] - obj2["position"]["rect"].center[1]
+    ) ** 2
     return distance
 
 
@@ -630,10 +631,10 @@ def awarness(obj, radius):
     """
     obj_pos = obj["position"]["rect"]
     projections = [
-        pygame.Rect(obj_pos.left, obj_pos.top + radius, obj_pos.width, radius),
-        pygame.Rect(obj_pos.right + radius, obj_pos.top, radius, obj_pos.height),
-        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+        pygame.Rect(obj_pos.left, obj_pos.top - radius, obj_pos.width, radius),
         pygame.Rect(obj_pos.left - radius, obj_pos.top, radius, obj_pos.height),
+        pygame.Rect(obj_pos.left, obj_pos.bottom, obj_pos.width, radius),
+        pygame.Rect(obj_pos.right, obj_pos.top, radius, obj_pos.height),
     ]
 
     results = [None, None, None, None]
@@ -642,6 +643,7 @@ def awarness(obj, radius):
         test_rect = test_obj["position"]["rect"]
         # gives 0,1,2,3
         for i in range(4):
+            pygame.draw.rect(mainWindow, (0, 0, 0), projections[i])
             if projections[i].colliderect(test_rect):
                 if results[i] is None or dist2(obj, results[i]) > dist2(obj, test_obj):
                     results[i] = test_obj
@@ -675,7 +677,7 @@ def do_wander(obj):
                 )
                 return
     # randomly change direction, or leave previous direction
-    rand = random.randint(0, 10)
+    rand = random.randint(0, 60)
     for i in standart_direction_pool:
         if rand == i:
             obj["position"]["direction"] = i
@@ -693,72 +695,37 @@ def standart_logic(obj):
     ---
         obj: object to apply
     """
-    vision = awarness(obj, 50)
-    tmp = 0
+    vision = awarness(obj, 500)
+    tmp = -1
     for i in vision:
+        tmp += 1
         # scan for enemy shoot and move to it
         if not (i is None) and i["type"] == "tank" and i["team"] != obj["team"]:
-            match tmp:
-                # enemy detected North
-                case 0:
-                    if obj["position"]["rect"].x > i["position"]["rect"].x:
-                        obj["position"]["direction"] = 1
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    elif obj["position"]["rect"].x < i["position"]["rect"].x:
-                        obj["position"]["direction"] = 3
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    else:
-                        obj["position"]["direction"] = 0
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        shoot(obj)
-                        return
-                # enemy detected East
-                case 1:
-                    if obj["position"]["rect"].y > i["position"]["rect"].y:
-                        obj["position"]["direction"] = 0
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    elif obj["position"]["rect"].y < i["position"]["rect"].y:
-                        obj["position"]["direction"] = 2
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    else:
-                        obj["position"]["direction"] = 1
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        shoot(obj)
-                        return
-                # enemy detected South
-                case 2:
-                    if obj["position"]["rect"].x > i["position"]["rect"].x:
-                        obj["position"]["direction"] = 1
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    elif obj["position"]["rect"].x < i["position"]["rect"].x:
-                        obj["position"]["direction"] = 3
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    else:
-                        obj["position"]["direction"] = 2
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        shoot(obj)
-                        return
-                # enemy detected West
-                case 3:
-                    if obj["position"]["rect"].y > i["position"]["rect"].y:
-                        obj["position"]["direction"] = 0
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    elif obj["position"]["rect"].y < i["position"]["rect"].y:
-                        obj["position"]["direction"] = 2
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        return
-                    else:
-                        obj["position"]["direction"] = 3
-                        obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                        shoot(obj)
-                        return
+            # enemy detected North
+            if tmp == 0:
+                # move closer verticaly if not close enough
+                obj["position"]["direction"] = 0
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            # enemy detected West
+            if tmp == 1:
+                obj["position"]["direction"] = 3
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            # enemy detected South
+            if tmp == 2:
+                obj["position"]["direction"] = 2
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            # enemy detected East
+            if tmp == 3:
+                obj["position"]["direction"] = 1
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
     do_wander(obj)
 
 
@@ -771,40 +738,40 @@ pygame.init()
 BLOCK_SIZE = 60
 # S2601624, Lesquir, Jules
 # create the obstacles, (BLOCK_LENGHT, BLOCK_WICTH, (x, y))
-objects.append(
-    create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, windowSize[1] / 3))
-)
-
-objects.append(
-    create_obstacle(
-        BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 8) * 5, windowSize[1] / 3)
-    )
-)
-
-objects.append(
-    create_obstacle(
-        BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, (windowSize[1] / 6) * 4)
-    )
-)
-
-objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
-
-objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 16) * 15, 0)))
-
-objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
-
-objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, (windowSize[1] / 12) * 11)))
+# objects.append(
+#     create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, windowSize[1] / 3))
+# )
+#
+# objects.append(
+#     create_obstacle(
+#         BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 8) * 5, windowSize[1] / 3)
+#     )
+# )
+#
+# objects.append(
+#     create_obstacle(
+#         BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, (windowSize[1] / 6) * 4)
+#     )
+# )
+#
+# objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
+#
+# objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, ((windowSize[0] / 16) * 15, 0)))
+#
+# objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
+#
+# objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, (windowSize[1] / 12) * 11)))
 
 objects.append(
     create_tank(
-        (60, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 3, 3, standart_logic
+        (360, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 1, 3, standart_logic
     )
 )
-objects.append(
-    create_tank(
-        (120, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 3, 3, standart_logic
-    )
-)
+# objects.append(
+#     create_tank(
+#         (120, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 3, 3, standart_logic
+#     )
+# )
 
 objects.append(
     create_tank(
