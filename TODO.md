@@ -3,8 +3,8 @@
 ## High priority
  - [ ] Tanks AI (to fix and improve) (Mykhailo)
  - [ ] Sprites for obstacles (Jules)
- - [ ] Fix sizes of sprites (Nikita)
- - [ ] Fix shooting at mouvement
+ - [x] Fix sizes of sprites (Nikita)
+ - [x] Fix shooting at mouvement
  - [ ] Setup battlefield + sizes (Jules)
 
 ## Mid priority

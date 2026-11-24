@@ -31,7 +31,7 @@ S = 2
 W = 3
 
 # Bullets parameters
-BULLET_SPEED = 5
+BULLET_SPEED = 6
 BULLET_SIZE = 5
 
 #########################
@@ -73,6 +73,14 @@ def test_collision(oper_ind, nex_pos):
             rect2 = objects[ind]["position"]["rect"]
             answer = nex_pos.colliderect(rect2)
             if answer:
+                print("{} ({}) ({}, {}) collides with {} ({}) ({}, {})"
+                      .format(objects[oper_ind]["name"],
+                              objects[oper_ind]["type"],
+                              nex_pos.topleft, nex_pos.bottomright,
+                              objects[ind]["name"],
+                              objects[ind]["type"],
+                              rect2.topleft, rect2.bottomright)
+                      )
                 return answer, ind
     return answer, None
 
@@ -137,8 +145,6 @@ def moveObject(ind):
         new_rect = apply_collide_logic(ind, index, new_rect)
 
     obj["position"]["rect"] = new_rect
-    print(new_rect.topleft)
-    print(new_rect.bottomright)
 
 
 # Mykhailo SUTYRIN S2601127
