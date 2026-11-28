@@ -7,7 +7,8 @@ import pygame
 import random
 import time
 
-DEBUG = True
+DEBUG = False
+LOGIC_DEBUG = True
 
 backgroundColor = (0, 191, 200)
 
@@ -33,7 +34,7 @@ W = 3
 # Bullets parameters
 BULLET_SPEED = 5
 BULLET_SIZE = 5
-VISION_DISTANCE = 50000  # in px^2
+VISION_DISTANCE = 70000  # in px^2
 
 #########################
 # Global object holders #
@@ -669,16 +670,16 @@ def do_wander(obj):
     obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
     # randomly change direction if current direction face an obstacle
     for i in near:
-        if not (i is None):
+        if i is not None:
             standart_direction_pool.remove(tmp)
-            tmp += 1
             if obj["position"]["direction"] == tmp:
                 obj["position"]["direction"] = random.randint(
                     0, len(standart_direction_pool) - 1
                 )
                 return
+            tmp += 1
     # randomly change direction, or leave previous direction
-    rand = random.randint(0, 60)
+    rand = random.randint(0, 190)
     for i in standart_direction_pool:
         if rand == i:
             obj["position"]["direction"] = i
@@ -686,95 +687,138 @@ def do_wander(obj):
 
 
 # S. Mykhailo S2601127
+def do_attack(obj, enemy, behaviour):
+    dist_x = enemy["position"]["rect"].centerx - obj["position"]["rect"].centerx
+    if LOGIC_DEBUG:
+        print(f"dist x is {dist_x}")
+    dist_y = enemy["position"]["rect"].centery - obj["position"]["rect"].centery
+    if LOGIC_DEBUG:
+        print(f"dist y is {dist_y}")
+
+    # chose prefered axe (Vertical or Horizontal)
+    if abs(dist_x) < abs(dist_y):
+        # if distance on ax is small enough move in direction of enemy and shoot
+        if -10 < dist_x and dist_x < 10:
+            # enemy is South
+            if dist_y > 0:
+                obj["position"]["direction"] = 2
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            # enemy is North
+            elif dist_y < 0:
+                obj["position"]["direction"] = 0
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+        elif dist_x < 0:
+            obj["position"]["direction"] = 3
+            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+            return
+        elif dist_x > 0:
+            obj["position"]["direction"] = 1
+            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+            return
+    elif abs(dist_x) > abs(dist_y):
+        # if distance on ax is small enough move in direction of enemy and shoot
+        if -10 < dist_y and dist_y < 10:
+            # enemy is East
+            if dist_x > 0:
+                obj["position"]["direction"] = 1
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            # enemy is West
+            elif dist_x < 0:
+                obj["position"]["direction"] = 3
+                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+                shoot(obj)
+                return
+            else:
+                print("ERROR: object is inside another object!")
+        elif dist_y < 0:
+            obj["position"]["direction"] = 0
+            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+            return
+        elif dist_y > 0:
+            obj["position"]["direction"] = 2
+            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
+            return
+
+
+# S. Mykhailo S2601127
 def standart_logic(obj):
     """
-    Scan in range for enemy tanks, shoot and move to them. Stop mouvement if distance is less then number of pixels.
+    Scan in range for enemy tanks, shoot and move to them.
 
-    Moves randomly if no enemy in range, bypass obstacles with left hand rule.
+    Moves randomly if no enemy in range.
 
     Parameters:
     ---
         obj: object to apply
     """
-    vision = awarness(obj, 500)
-    tmp = -1
     for enemy in objects:
         # ensure it's enemy
-        if (
-            enemy != None
-            and enemy.get("type") == "tank"
-            and enemy.get("team") != obj.get("team")
-        ):
-            distance_en_2 = dist2(obj, enemy)
-            if distance_en_2 >= VISION_DISTANCE:
+        if enemy != None and enemy["type"] == "tank" and enemy["team"] != obj["team"]:
+            distance = dist2(obj, enemy)
+            if LOGIC_DEBUG:
+                print(f"Distance to enemy is {distance}")
+            if not (distance <= VISION_DISTANCE):
+                do_wander(obj)
+            else:
                 see_enemy = True
+                if LOGIC_DEBUG:
+                    print(f"see_enemy is {see_enemy}")
                 for obstacle in objects:
                     # ensure it's obstacle and obstacle collide with line(distance between enemy and main object)
-                    if obstacle.get("type") == "obstacle" and obstacle.get(
+                    if obstacle["type"] == "obstacle" and obstacle["position"][
                         "rect"
-                    ).clipline(obj.get("rect").center, objects[i].get("rect").center):
+                    ].clipline(
+                        obj["position"]["rect"].center,
+                        enemy["position"]["rect"].center,
+                    ):
                         see_enemy = False
-                if see_enemy:
-                    dist_x = (
-                        enemy["position"]["rect"].centerx
-                        - obj["position"]["rect"].centerx
-                    )
-                    dist_y = (
-                        enemy["position"]["rect"].centery
-                        - obj["position"]["rect"].centery
-                    )
-                    if dist_x < dist_y:
-                        # if distance on ax is small enough move in direction of enemy and shoot
-                        if -10 < dist_x and dist_x < 10:
-                            # enemy is South
-                            if dist_y > 0:
-                                obj["position"]["direction"] = 2
-                                obj["mouvement"]["speed"] = obj.get("max_speed")
-                                shoot(obj)
-                                return
-                            # enemy is North
-                            elif dist_y < 0:
-                                obj["position"]["direction"] = 0
-                                obj["mouvement"]["speed"] = obj.get("max_speed")
-                                shoot(obj)
-                                return
-                            else:
-                                print("ERROR: object is inside another object!")
-                        elif dist_x < 0:
-                            obj["position"]["direction"] = 1
-                            obj["mouvement"]["speed"] = obj.get("max_speed")
-                            return
-                        elif dist_x > 0:
-                            obj["position"]["direction"] = 3
-                            obj["mouvement"]["speed"] = obj.get("max_speed")
-                            return
-                    elif dist_x > dist_y:
-                        # if distance on ax is small enough move in direction of enemy and shoot
-                        if -10 > dist_y and dist_y < 10:
-                            # enemy is West
-                            if dist_y > 0:
-                                obj["position"]["direction"] = 3
-                                obj["mouvement"]["speed"] = obj.get("max_speed")
-                                shoot(obj)
-                                return
-                            # enemy is East
-                            elif dist_y < 0:
-                                obj["position"]["direction"] = 1
-                                obj["mouvement"]["speed"] = obj.get("max_speed")
-                                shoot(obj)
-                                return
-                            else:
-                                print("ERROR: object is inside another object!")
-                        elif dist_y < 0:
-                            obj["position"]["direction"] = 1
-                            obj["mouvement"]["speed"] = obj.get("max_speed")
-                            return
-                        elif dist_x > 0:
-                            obj["position"]["direction"] = 2
-                            obj["mouvement"]["speed"] = obj.get("max_speed")
-                            return
-                else:
+                if not see_enemy:
                     do_wander(obj)
+                else:
+                    do_attack(obj, enemy, "standart")
+
+
+def suicide_logic(obj):
+    """
+    Scan in range for enemy tanks, shoot and move to them suicide into them.
+
+    Moves randomly if no enemy in range.
+
+    Parameters:
+    ---
+        obj: object to apply
+    """
+    for enemy in objects:
+        # ensure it's enemy
+        if enemy != None and enemy["type"] == "tank" and enemy["team"] != obj["team"]:
+            distance = dist2(obj, enemy)
+            if LOGIC_DEBUG:
+                print(f"Distance to enemy is {distance}")
+            if not (distance <= VISION_DISTANCE):
+                do_wander(obj)
+            else:
+                see_enemy = True
+                if LOGIC_DEBUG:
+                    print(f"see_enemy is {see_enemy}")
+                for obstacle in objects:
+                    # ensure it's obstacle and obstacle collide with line(distance between enemy and main object)
+                    if obstacle["type"] == "obstacle" and obstacle["position"][
+                        "rect"
+                    ].clipline(
+                        obj["position"]["rect"].center,
+                        enemy["position"]["rect"].center,
+                    ):
+                        see_enemy = False
+                if not see_enemy:
+                    do_wander(obj)
+                else:
+                    do_attack(obj, enemy, "suicide")
 
 
 ####################
@@ -796,11 +840,11 @@ BLOCK_SIZE = 60
 #     )
 # )
 #
-# objects.append(
-#     create_obstacle(
-#         BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, (windowSize[1] / 6) * 4)
-#     )
-# )
+objects.append(
+    create_obstacle(
+        BLOCK_SIZE, BLOCK_SIZE, (windowSize[0] / 4, (windowSize[1] / 6) * 4)
+    )
+)
 #
 # objects.append(create_obstacle(BLOCK_SIZE, BLOCK_SIZE, (0, 0)))
 #
@@ -823,7 +867,7 @@ objects.append(
 
 objects.append(
     create_tank(
-        (500, 400), BLOCK_SIZE, "images/main_tank.png", 3, 1, 1, 3, 3, user_control
+        (500, 400), BLOCK_SIZE, "images/main_tank.png", 30, 1, 1, 3, 3, user_control
     )
 )
 objects[-1]["name"] = "user"
