@@ -34,7 +34,13 @@ W = 3
 # Bullets parameters
 BULLET_SPEED = 5
 BULLET_SIZE = 5
-VISION_DISTANCE = 70000  # in px^2
+
+STANDART_VISION_DISTANCE = 120000  # in px^2 for not running sqrt in loop
+
+STANDART_AIM_DISTANCE = 10
+STANDART_STOP_DISTANCE = 180
+STANDART_SNIPER_RETREAT_DISTANCE = 260
+STANDART_SNIPER_STOP_DISTANCE = 280
 
 #########################
 # Global object holders #
@@ -687,88 +693,119 @@ def do_wander(obj):
 
 
 # S. Mykhailo S2601127
-def do_attack(obj, enemy, behaviour):
-    dist_x = enemy["position"]["rect"].centerx - obj["position"]["rect"].centerx
-    if LOGIC_DEBUG:
-        print(f"dist x is {dist_x}")
-    dist_y = enemy["position"]["rect"].centery - obj["position"]["rect"].centery
-    if LOGIC_DEBUG:
-        print(f"dist y is {dist_y}")
+def do_attack(obj, enemy, behaviour="standart"):
+    """
+    Move obj toward enemy and shoot when aligned, according to behaviour. Behaviour is explained in BTypes (Behaviour Types).
 
-    # chose prefered axe (Vertical or Horizontal)
-    if abs(dist_x) < abs(dist_y):
-        # if distance on ax is small enough move in direction of enemy and shoot
-        if -10 < dist_x and dist_x < 10:
-            # enemy is South
-            if dist_y > 0:
-                obj["position"]["direction"] = 2
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            # enemy is North
-            elif dist_y < 0:
-                obj["position"]["direction"] = 0
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-        elif dist_x < 0:
-            obj["position"]["direction"] = 3
-            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-            return
-        elif dist_x > 0:
-            obj["position"]["direction"] = 1
-            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-            return
-    elif abs(dist_x) > abs(dist_y):
-        # if distance on ax is small enough move in direction of enemy and shoot
-        if -10 < dist_y and dist_y < 10:
-            # enemy is East
-            if dist_x > 0:
-                obj["position"]["direction"] = 1
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            # enemy is West
-            elif dist_x < 0:
-                obj["position"]["direction"] = 3
-                obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-                shoot(obj)
-                return
-            else:
-                print("ERROR: object is inside another object!")
-        elif dist_y < 0:
-            obj["position"]["direction"] = 0
-            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-            return
-        elif dist_y > 0:
-            obj["position"]["direction"] = 2
-            obj["mouvement"]["speed"] = obj["mouvement"]["max_speed"]
-            return
+    Parameters:
+        obj: tank
+        enemy: tank
+        behaviour:  string (standart/suicide/sniper/tank)
+
+    BTypes:
+        standart - approach, stop within STANDART_STOP_DISTANCE, shoot when aligned
+        suicide  - ram the enemy, never shoot
+        sniper    - like standart, but run away when either axis distance > STANDART_SNIPER_RETREAT_DISTANCE
+        tank     - like suicide, but also shoot when aligned
+    """
+    position = obj.get("position")
+    mouvement = obj.get("mouvement")
+    enemy_position = enemy.get("position")
+
+    my_rect = position.get("rect")
+    enemy_rect = enemy_position.get("rect")
+
+    distance_x = enemy_rect.centerx - my_rect.centerx
+    distance_y = enemy_rect.centery - my_rect.centery
+
+    need_to_shoot = False
+    # place direction toward enemy
+    # abs(x) is same as |x| in math
+    axe_distance = None
+    # chose most efficient axis
+    if abs(distance_x) <= abs(distance_y):
+        # distance on most efficient axis should be less then aim distance to move directly in direction of enemy. If moving directly to enemy, object shoot
+        if abs(distance_x) > STANDART_AIM_DISTANCE:
+            direction = E if distance_x > 0 else W
+        else:
+            direction = S if distance_y > 0 else N
+            need_to_shoot = True
+            # need for sniper retreat
+            axe_distance = distance_y
+    else:
+        if abs(distance_y) > STANDART_AIM_DISTANCE:
+            direction = S if distance_y > 0 else N
+        else:
+            direction = E if distance_x > 0 else W
+            need_to_shoot = True
+            # need for sniper retreat
+            axe_distance = distance_x
+
+    # sniper retreat rules
+    sniper_retreat_rules = behaviour == "sniper" and (
+        axe_distance is not None
+        and abs(axe_distance) < STANDART_SNIPER_RETREAT_DISTANCE
+    )
+
+    if sniper_retreat_rules:
+        direction = (direction + 2) % 4
+        need_to_shoot = False
+
+    # apply vars defined earlier
+    # behaviours tank and suicide are managed automatically, by not applying standart and sniper logics.
+    position["direction"] = direction
+    mouvement["speed"] = mouvement["max_speed"]
+
+    # STOP block:
+    # stop if close enough to enemy only for sniper
+    if (
+        behaviour == "sniper"
+        and axe_distance is not None
+        and abs(axe_distance) < STANDART_SNIPER_STOP_DISTANCE
+        and not sniper_retreat_rules
+    ):
+        mouvement["speed"] = 0
+
+    # stop if close enough to enemy only for standart
+    if (
+        behaviour == "standart"
+        and axe_distance is not None
+        and abs(axe_distance) < STANDART_STOP_DISTANCE
+    ):
+        mouvement["speed"] = 0
+
+    # shoot only if need to shoot and behaviour that have a gun (only suicide)
+    if need_to_shoot and behaviour != "suicide":
+        shoot(obj)
+        return
+    return
 
 
 # S. Mykhailo S2601127
-def standart_logic(obj):
+def logic(obj, behaviour):
     """
-    Scan in range for enemy tanks, shoot and move to them.
+    Scan in range for enemy tanks, shoot and move to them. More precise about behaviour in BTypes section.
 
     Moves randomly if no enemy in range.
 
     Parameters:
-    ---
         obj: object to apply
+        behaviour:  string (standart/suicide/sniper/tank)
+
+    BTypes:
+        standart - approach, stop within 200 px, shoot when aligned
+        suicide  - ram the enemy, never shoot
+        sniper    - like standart, but run away when either axis distance > 300 px
+        tank     - like suicide, but also shoot when aligned
     """
     for enemy in objects:
         # ensure it's enemy
         if enemy != None and enemy["type"] == "tank" and enemy["team"] != obj["team"]:
             distance = dist2(obj, enemy)
-            if LOGIC_DEBUG:
-                print(f"Distance to enemy is {distance}")
-            if not (distance <= VISION_DISTANCE):
+            if not (distance <= STANDART_VISION_DISTANCE):
                 do_wander(obj)
             else:
                 see_enemy = True
-                if LOGIC_DEBUG:
-                    print(f"see_enemy is {see_enemy}")
                 for obstacle in objects:
                     # ensure it's obstacle and obstacle collide with line(distance between enemy and main object)
                     if obstacle["type"] == "obstacle" and obstacle["position"][
@@ -781,44 +818,23 @@ def standart_logic(obj):
                 if not see_enemy:
                     do_wander(obj)
                 else:
-                    do_attack(obj, enemy, "standart")
+                    do_attack(obj, enemy, behaviour)
+
+
+def standart_logic(obj):
+    logic(obj, "standart")
+
+
+def sniper_logic(obj):
+    logic(obj, "sniper")
 
 
 def suicide_logic(obj):
-    """
-    Scan in range for enemy tanks, shoot and move to them suicide into them.
+    logic(obj, "suicide")
 
-    Moves randomly if no enemy in range.
 
-    Parameters:
-    ---
-        obj: object to apply
-    """
-    for enemy in objects:
-        # ensure it's enemy
-        if enemy != None and enemy["type"] == "tank" and enemy["team"] != obj["team"]:
-            distance = dist2(obj, enemy)
-            if LOGIC_DEBUG:
-                print(f"Distance to enemy is {distance}")
-            if not (distance <= VISION_DISTANCE):
-                do_wander(obj)
-            else:
-                see_enemy = True
-                if LOGIC_DEBUG:
-                    print(f"see_enemy is {see_enemy}")
-                for obstacle in objects:
-                    # ensure it's obstacle and obstacle collide with line(distance between enemy and main object)
-                    if obstacle["type"] == "obstacle" and obstacle["position"][
-                        "rect"
-                    ].clipline(
-                        obj["position"]["rect"].center,
-                        enemy["position"]["rect"].center,
-                    ):
-                        see_enemy = False
-                if not see_enemy:
-                    do_wander(obj)
-                else:
-                    do_attack(obj, enemy, "suicide")
+def tank_logic(obj):
+    logic(obj, "tank")
 
 
 ####################
@@ -856,7 +872,7 @@ objects.append(
 
 objects.append(
     create_tank(
-        (360, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 1, 3, standart_logic
+        (360, 60), BLOCK_SIZE, "images/enemy_tank.png", 3, 1, 2, 1, 3, suicide_logic
     )
 )
 # objects.append(
